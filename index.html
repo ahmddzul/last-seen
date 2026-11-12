@@ -693,6 +693,11 @@ svg{display:block}
 .wl-lang{align-self:flex-start;animation:fadeup .8s 3s both}
 .wl-lang button{min-height:44px;min-width:96px}
 .welcome.quick *{animation:none!important}
+.welcome .wl-snd{position:fixed;align-self:auto;width:auto;top:max(14px,env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px));z-index:3;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px 0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(8,10,16,.55);backdrop-filter:blur(8px);font-size:13.5px;font-weight:600;color:#e6e9f0;animation:fadeup .8s 1.8s both}
+.wl-snd svg{width:18px;height:18px}
+.wl-snd[aria-pressed="false"]{border-color:rgba(233,185,73,.55);color:#f3e2b5}
+.wl-snd[aria-pressed="false"] svg{animation:sndpulse 1.6s ease-in-out infinite}
+@keyframes sndpulse{50%{opacity:.45}}
 .menu{justify-content:flex-start;gap:16px;padding-top:16px}
 .hm-top{display:flex;align-items:center;gap:8px}
 .hm-brand{flex:1;min-width:0}
@@ -2038,7 +2043,8 @@ document.addEventListener('click',e=>{
     case 'accGo':accSubmit();break;
     case 'accOut':accLogout();break;
     case 'adminOpen':openAdmin();break;
-    case 'wlLang':if(G.lang!==v){G.lang=v;SAVE.lang=v;persist();document.documentElement.lang=v;showWelcome(true)}break;
+    case 'wlLang':wakeSound(false);if(G.lang!==v){G.lang=v;SAVE.lang=v;persist();document.documentElement.lang=v;showWelcome(true)}break;
+    case 'wlSound':if(G.audioOn&&SAVE.sound){SAVE.sound=false;persist();rainSound(false)}else{SAVE.sound=true;persist();wakeSound(true)}showWelcome(true);break;
     case 'settings':openSettings();break;
     case 'langM':G.lang=v;SAVE.lang=v;persist();closeSheet();showMenu();openSettings();break;
     case 'sndM':SAVE.sound=v==='1';persist();if(SAVE.sound){G.audioOn=true;rainSound(true)}else rainSound(false);openSettings();break;
@@ -2906,14 +2912,25 @@ let RAIN=null;
 function noiseBuf(c,sec){const b=c.createBuffer(1,Math.floor(c.sampleRate*sec),c.sampleRate);const d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b}
 function rainSound(on){
   const c=on?ctx():AC;if(!c)return;
-  if(on&&!RAIN){try{const s=c.createBufferSource();s.buffer=noiseBuf(c,2);s.loop=true;const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=1500;f.Q.value=.5;const g=c.createGain();g.gain.value=0;s.connect(f).connect(g).connect(c.destination);s.start();g.gain.linearRampToValueAtTime(.045,c.currentTime+1.5);RAIN={s,g}}catch(e){}}
-  else if(!on&&RAIN){const n=RAIN;RAIN=null;try{n.g.gain.cancelScheduledValues(c.currentTime);n.g.gain.setValueAtTime(n.g.gain.value,c.currentTime);n.g.gain.linearRampToValueAtTime(0,c.currentTime+.6);setTimeout(()=>{try{n.s.stop()}catch(e){}},700)}catch(e){}}
+  if(on&&!RAIN){try{
+    const g=c.createGain();g.gain.value=0;g.connect(c.destination);
+    const hiss=c.createBufferSource();hiss.buffer=noiseBuf(c,3);hiss.loop=true;const hf=c.createBiquadFilter();hf.type='bandpass';hf.frequency.value=2200;hf.Q.value=.4;const hg=c.createGain();hg.gain.value=.9;hiss.connect(hf).connect(hg).connect(g);
+    const body=c.createBufferSource();body.buffer=noiseBuf(c,4);body.loop=true;const bf=c.createBiquadFilter();bf.type='lowpass';bf.frequency.value=480;const bg=c.createGain();bg.gain.value=1.3;body.connect(bf).connect(bg).connect(g);
+    const sw=c.createOscillator();sw.frequency.value=.13;const swg=c.createGain();swg.gain.value=.25;sw.connect(swg).connect(hg.gain);
+    hiss.start();body.start();sw.start();g.gain.linearRampToValueAtTime(.075,c.currentTime+2);
+    const drip=()=>{if(!RAIN)return;try{const t0=c.currentTime,o=c.createOscillator(),og=c.createGain();o.type='sine';o.frequency.setValueAtTime(1800+Math.random()*1600,t0);o.frequency.exponentialRampToValueAtTime(500,t0+.07);og.gain.setValueAtTime(.0001,t0);og.gain.exponentialRampToValueAtTime(.025,t0+.005);og.gain.exponentialRampToValueAtTime(.0001,t0+.09);o.connect(og).connect(c.destination);o.start(t0);o.stop(t0+.1)}catch(e){}RAIN.dt=setTimeout(drip,180+Math.random()*900)};
+    RAIN={src:[hiss,body,sw],g};drip()}catch(e){}}
+  else if(!on&&RAIN){const n=RAIN;RAIN=null;clearTimeout(n.dt);try{n.g.gain.cancelScheduledValues(c.currentTime);n.g.gain.setValueAtTime(n.g.gain.value,c.currentTime);n.g.gain.linearRampToValueAtTime(0,c.currentTime+.6);setTimeout(()=>{n.src.forEach(x=>{try{x.stop()}catch(e){}})},700)}catch(e){}}
 }
-function thunder(){if(!G.audioOn)return;const c=ctx();if(!c)return;try{const s=c.createBufferSource();s.buffer=noiseBuf(c,3);const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=160;const g=c.createGain();const t0=c.currentTime;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.7,t0+.08);g.gain.exponentialRampToValueAtTime(.0001,t0+2.8);s.connect(f).connect(g).connect(c.destination);s.start(t0);s.stop(t0+3)}catch(e){}buzz(60)}
+function thunder(near){if(!G.audioOn)return;const c=ctx();if(!c)return;try{const t0=c.currentTime,amp=near?1:.75;
+  const cr=c.createBufferSource();cr.buffer=noiseBuf(c,.6);const cf=c.createBiquadFilter();cf.type='highpass';cf.frequency.value=900;const cg=c.createGain();cg.gain.setValueAtTime(.0001,t0);cg.gain.exponentialRampToValueAtTime(.35*amp,t0+.015);cg.gain.exponentialRampToValueAtTime(.0001,t0+.45);cr.connect(cf).connect(cg).connect(c.destination);cr.start(t0);cr.stop(t0+.6);
+  const s=c.createBufferSource();s.buffer=noiseBuf(c,5);const f=c.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(260,t0);f.frequency.exponentialRampToValueAtTime(70,t0+4.5);const g=c.createGain();
+  g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.9*amp,t0+.12);g.gain.exponentialRampToValueAtTime(.35*amp,t0+.9);g.gain.exponentialRampToValueAtTime(.6*amp,t0+1.4);g.gain.exponentialRampToValueAtTime(.2*amp,t0+2.6);g.gain.exponentialRampToValueAtTime(.0001,t0+4.8);
+  s.connect(f).connect(g).connect(c.destination);s.start(t0);s.stop(t0+5)}catch(e){}buzz(near?[40,30,90]:60)}
 
 function showWelcome(quick){
   G.scene='welcome';
-  const d=scene(`<div class="wl-in">
+  const d=scene(`<button class="wl-snd" data-a="wlSound" aria-pressed="${!!(G.audioOn&&SAVE.sound)}">${G.audioOn&&SAVE.sound?IC_SND_ON:IC_SND_OFF}<span>${G.audioOn&&SAVE.sound?(G.lang==='id'?'Suara menyala':'Sound on'):(G.lang==='id'?'Dengarkan hujannya':'Hear the rain')}</span></button><div class="wl-in">
     <p class="wl-pre">${G.lang==='id'?'Hujan sejak sore. Di peron 2 Stasiun Bogor, sebuah HP berdering tanpa pemilik.':'Rain since the afternoon. On platform 2 at Bogor Station, a phone keeps ringing with no owner.'}</p>
     <h1 class="wordmark wl-title">last<br><b>seen</b></h1>
     <p class="wl-status"><b>Nadia</b> · ${G.lang==='id'?'terakhir dilihat Jum pukul 19.12':'last seen Fri at 19:12'}</p>
@@ -2922,6 +2939,10 @@ function showWelcome(quick){
     <p class="fine" style="color:#a7afc0">${esc(t(U.phones))}</p></div>`,'welcome');
   d.dataset.a='enter';if(quick)d.classList.add('quick');fxMount(d);
 }
+const IC_SND_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>';
+const IC_SND_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+function wakeSound(strike){if(!SAVE.sound)return;if(!ctx())return;const was=G.audioOn;G.audioOn=true;rainSound(true);if(strike||!was){setTimeout(()=>{fxStrikeNow()},strike?350:900)}}
+function fxStrikeNow(){const w=FX.wrap;if(!w)return;const f=$('.fx-flash',w);if(f&&SAVE.fx){f.classList.remove('go');w.classList.remove('lit');void f.offsetWidth;f.classList.add('go');w.classList.add('lit')}setTimeout(()=>thunder(true),SAVE.fx?380:0)}
 function enterHome(){ctx();G.audioOn=true;if(SAVE.sound)rainSound(true);showMenu();accPull()}
 function nextStory(){
   if(!SAVE.best.prolog)return {id:'prolog',ey:["Mulai di sini","Start here"],cta:["Mulai Prolog","Start the Prologue"]};
