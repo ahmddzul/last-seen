@@ -9,3 +9,10 @@ Mainkan: https://ahmddzul.github.io/last-seen/
 - Seluruh kode game ada di `index.html`. Foto ada di `assets/p/`, jadi buka lewat GitHub Pages atau server lokal.
 
 Dibuat oleh [@ahmddzul](https://instagram.com/ahmddzul). Dukung lewat [Saweria](https://saweria.co/ahmddzul).
+
+## Data dan dasbor admin
+
+- `apps-script/Code.gs`: kode Google Apps Script untuk papan skor, statistik, ulasan, dan pengumuman.
+- `admin.html`: dasbor admin, dibuka di `/admin.html`, dilindungi kunci admin (Script Property `ADMIN_KEY`).
+- Alamat Web app Apps Script dipasang di konstanta `SHEET_URL` pada `index.html` dan `admin.html`.
+

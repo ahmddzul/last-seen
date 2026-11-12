@@ -604,6 +604,27 @@ svg{display:block}
 .lb div.me{background:color-mix(in srgb,var(--ios-blue) 14%,transparent);font-weight:600}
 .lb .rk{color:var(--faint);font-weight:600}
 .lb .st{color:var(--gold);font-size:12px;letter-spacing:1px}
+.ann{display:flex;gap:10px;align-items:flex-start;padding:12px 8px 12px 14px;border-radius:14px;background:rgba(233,185,73,.12);border:1px solid rgba(233,185,73,.35);color:#f3e2b5;font-size:14px;line-height:1.45;margin-top:12px}
+.ann span{flex:1;padding-top:2px}
+.ann button{width:44px;height:44px;margin:-10px -2px -10px 0;display:grid;place-items:center;color:#f3e2b5;flex:none}
+.ann button svg{width:16px;height:16px}
+.rate{display:flex;flex-direction:column;gap:6px;align-items:center;padding:12px;border-radius:14px;border:1px solid var(--line)}
+.rate p{margin:0;font-size:14px;font-weight:600}
+.rate-stars{display:flex;gap:2px}
+.rate-stars button{width:44px;height:44px;font-size:26px;color:#5b5f6b;display:grid;place-items:center}
+.rate-stars button:hover,.rate-stars button[aria-pressed="true"]{color:var(--gold)}
+.rate-stars.big{justify-content:center}
+.rate-stars.big button{width:52px;height:52px;font-size:34px}
+.rate-l{font-size:14px;font-weight:600}
+#rtx{width:100%;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:inherit;padding:10px 12px;font:inherit;resize:vertical;min-height:96px}
+.rate-done{text-align:center;margin:0}
+.lb-empty{margin:0;padding:14px;font-size:14px;color:var(--mute);border-top:1px solid var(--line)}
+.lb .lb-join{display:flex;flex-direction:column;gap:8px;padding:14px;border-top:1px solid var(--line)}
+.lb .lb-join label{font-size:14px;font-weight:600}
+.lb .lb-join div{display:flex;gap:8px;padding:0;border:0}
+.lb .lb-join input{flex:1;min-width:0;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:inherit;padding:0 12px;font:inherit}
+.lb .lb-join .btn{width:auto;padding:0 18px;min-height:44px}
+.lb .lb-join small{font-size:12px;color:var(--faint)}
 .nextc{text-align:center;font-size:13px;color:var(--mute)}
 .nextc b{display:block;font-size:24px;font-weight:300;color:var(--fg);font-variant-numeric:tabular-nums;margin-top:2px}
 .arch{display:flex;gap:8px;flex-wrap:wrap}
@@ -638,6 +659,9 @@ svg{display:block}
 .wl-status b{color:var(--wa-text);font-weight:600}
 .wl-tap{align-self:flex-start;min-height:48px;padding:14px 22px;border-radius:14px;border:1px solid rgba(255,255,255,.3);background:rgba(8,10,16,.5);font-weight:600;font-size:16px;animation:fadeup .8s 3.2s both}
 .wl-tap:hover{background:rgba(255,255,255,.08)}
+.wl-lang{align-self:flex-start;animation:fadeup .8s 3s both}
+.wl-lang button{min-height:44px;min-width:96px}
+.welcome.quick *{animation:none!important}
 .menu{justify-content:flex-start;gap:16px;padding-top:16px}
 .hm-top{display:flex;align-items:center;gap:8px}
 .hm-brand{flex:1;min-width:0}
@@ -1278,7 +1302,7 @@ function showMode(id){
 function startLevel(id,mode){
   if(LV[id].req&&!SAVE.best[LV[id].req])return;
   if(LV[id].battery!=null&&!mode){showMode(id);return}
-  freshState(id);G.mode=mode||'detective';G.scene='cine';
+  freshState(id);G.mode=mode||'detective';G.scene='cine';track('start',{lv:id,mode:G.mode});
   const go=()=>{clearScene();G.scene='play';buildPlay();afterStart()};
   if(id==='bab1'&&!SAVE.seenHowto){SAVE.seenHowto=1;persist();runCine(LV[id].cine,()=>showHowto(3,go));}
   else runCine(LV[id].cine,go);
@@ -1859,7 +1883,7 @@ function finish(){
   const st=1+(s2?1:0)+(s3?1:0);
   const score=Math.max(0,(L.battery!=null?Math.round(G.battery/Math.max(1,G.mStart||G.battery)*850):600)+(s2?500:0)+G.secrets.length*400-G.wrong*150-G.hints*200+(L.battery!=null?300:0));
   const prev=SAVE.best[L.id];const isBest=!prev||score>prev.score;
-  SAVE.best[L.id]={stars:Math.max(st,prev?prev.stars:0),score:Math.max(score,prev?prev.score:0)};if(G.endKey){SAVE.endings=SAVE.endings||{};SAVE.endings[G.endKey]=1}persist();
+  SAVE.best[L.id]={stars:Math.max(st,prev?prev.stars:0),score:Math.max(score,prev?prev.score:0)};if(G.endKey){SAVE.endings=SAVE.endings||{};SAVE.endings[G.endKey]=1}persist();track('finish',{lv:L.id,mode:G.mode,stars:st,score});
   const miss=L.secrets.filter(s=>!G.secrets.includes(s.id));
   const ok=(b,x)=>`<div class="${b?'ok':''}">${b?I.check:I.cross}<span>${esc(t(x))}</span></div>`;
   const nx=ORDER[ORDER.indexOf(L.id)+1];
@@ -1872,6 +1896,7 @@ function finish(){
     <div class="rank">${esc(t(U.ranks[st-1]))}${isBest&&prev?` · ${G.lang==='id'?'Rekor baru':'New best'}`:''}</div>
     <div class="crit">${ok(true,U.c1)}${ok(s2,U.c2)}${L.secrets.length?ok(s3,G.mode==='story'?[U.c3[0]+' (mode Detektif)',U.c3[1]+' (Detective mode)']:U.c3):ok(true,U.c3none)}</div>
     ${L.id!=='prolog'?`<div class="support"><p>${L.id==='bab5'?(G.lang==='id'?'Kamu sudah menjemput Nadia pulang. Season 2 sedang digarap. Kalau mau membantu Nenek Siti ditemukan lebih cepat, kamu bisa dukung pembuatnya.':"You brought Nadia home. Season 2 is in the works. If you'd like to help Grandma Siti get found sooner, you can support its maker."):(G.lang==='id'?'Suka ceritanya? Last Seen gratis dan akan tetap gratis. Kalau berkenan, kamu bisa traktir kopi pembuatnya.':'Enjoyed the story? Last Seen is free and will stay free. If you like, you can buy its maker a coffee.')}</p><a href="${SAW_URL}" target="_blank" rel="noopener">${G.lang==='id'?'Traktir kopi di Saweria':'Buy a coffee on Saweria'}</a></div>`:''}
+    ${rateHtml(L.id)}
     ${miss.length?`<p class="miss"><b>${esc(t(U.missed))} (${miss.length}):</b> ${miss.map(s=>esc(t(s.tease))).join(' · ')}</p>`:''}
     ${L.id==='bab5'?`<p class="miss" style="text-align:center">${G.lang==='id'?'Ulangi Bab 3 dan ambil pilihan lain untuk melihat ending berbeda.':'Replay Chapter 3 and choose differently to see another ending.'}</p>`:''}
     <div class="btns" style="width:100%;max-width:340px">${nextBtn}<button class="btn ${st<3?'':''}" data-a="startLv" data-v="${L.id}">${esc(t(st<3?U.replay:U.replay2))}</button><button class="btn" data-a="toMenu">${esc(t(U.toMenu))}</button></div>`,'result');
@@ -1880,7 +1905,7 @@ function finish(){
   },300);
 }
 function fail(force){
-  if(G.over&&!force)return;G.over=true;G.cut=true;SFX.bad();buzz([300,100,300]);
+  if(G.over&&!force)return;G.over=true;track('fail',{lv:G.level,mode:G.mode,x:G.endKey||''});G.cut=true;SFX.bad();buzz([300,100,300]);
   const M=mtr(lv());const d=devEl('nadia');if(d&&M.k==='batt'){showPhone('nadia');d.classList.add('dead')}
   setTimeout(()=>{
     G.scene='fail';
@@ -1972,6 +1997,12 @@ document.addEventListener('click',e=>{
     case 'toMenu':closeSheet();showMenu();break;
     case 'setLang':G.lang=v;SAVE.lang=v;persist();showMenu();break;
     case 'enter':enterHome();break;
+    case 'rate':openRate(el.dataset.lv,+v);break;
+    case 'rateOpen':openRate(v,0);break;
+    case 'rateStar':setRateStar(+v);break;
+    case 'rateSend':sendRate();break;
+    case 'annX':SAVE.annSeen=G.cfg&&G.cfg.annId;persist();{const a=$('.ann');if(a)a.remove()}break;
+    case 'wlLang':if(G.lang!==v){G.lang=v;SAVE.lang=v;persist();document.documentElement.lang=v;showWelcome(true)}break;
     case 'settings':openSettings();break;
     case 'langM':G.lang=v;SAVE.lang=v;persist();closeSheet();showMenu();openSettings();break;
     case 'sndM':SAVE.sound=v==='1';persist();if(SAVE.sound){G.audioOn=true;rainSound(true)}else rainSound(false);openSettings();break;
@@ -2147,7 +2178,7 @@ function choiceSheet(C){G.choice=C;
 function pickChoice(i){const C=G.choice;if(!C)return;G.choice=null;closeSheet();C.opts[+i].go()}
 function sendEvidence(){const L=lv();if(G.flags.send||!L.onSend)return;G.flags.send=1;renderHud();L.onSend()}
 function endingCine(key,name,lines,last){
-  G.over=true;G.cut=true;G.endKey=key;G.endName=name;closeSheet();
+  G.over=true;G.cut=true;G.endKey=key;G.endName=name;closeSheet();if(key!=='late')track('ending',{lv:'bab5',mode:G.mode,x:key});
   const ep=[{c:'date',x:["Seminggu kemudian · 23.11","A week later · 23:11"]},{x:["HP Ratna masih disita polisi, dalam keadaan mati.","Ratna's phone is still in police custody, switched off."]},{x:["Malam itu HP Raka bergetar sekali.","That night Raka's phone buzzes once."]},{c:'bubble',x:last},{c:'status',x:["Ibu · terakhir dilihat 14 bulan lalu","Mum · last seen 14 months ago"]}];
   later(()=>{if(G.board)closeBoard();runCine(lines.concat(ep),key==='late'?()=>fail(true):finish)},900);
 }
@@ -2391,6 +2422,7 @@ LV.bab3={id:'bab3',req:'bab2',no:["Bab 3","Chapter 3"],title:["Relawan","Volunte
             {x:["Hanya ke Ipda Sari","Only tell Inspector Sari"],sub:["Tidak ada orang lain yang tahu.","No one else will know."],go(){bab3After(false)}}]})}
 };
 function bab3After(leak){
+  track('choice',{lv:'bab3',mode:G.mode,x:leak?'leak':'quiet'});
   SAVE.flags=SAVE.flags||{};SAVE.flags.leak=leak;persist();G.flags.picked=1;G.over=true;renderHud();
   showPhone('raka');openApp('raka','obrol',null,true);
   if(leak){addMsgs('raka','cari',[{f:'m',x:["Teman-teman, kemungkinan besar Nadia ada di Sukabumi. Daerah Cikole.","Everyone, Nadia is most likely in Sukabumi. Around Cikole."],tm:'now',tk:3},{f:'t',who:'Dimas',x:["Siap, Mas. Terima kasih. Saya yang koordinasi.","Got it. Thank you. I'll coordinate."],tm:'now'}],{silent:true});push('raka','chat','cari')}
@@ -2687,11 +2719,13 @@ function dcResult(){
   ${sawOnce?`<p class="fine saw7">${G.lang==='id'?'Tujuh hari berturut-turut. Terima kasih sudah setia.':'Seven days in a row. Thanks for sticking around.'} <a href="${SAW_URL}" target="_blank" rel="noopener">${G.lang==='id'?'Dukung di Saweria':'Support on Saweria'}</a></p>`:''}
   <div class="share" id="sharebox">${esc(share)}</div>
   <button class="btn pri" data-a="dcShare">${G.lang==='id'?'Salin hasil untuk dibagikan':'Copy result to share'}</button>
-  <div class="lb"><h4>${G.lang==='id'?'Papan teman hari ini':"Friends today"}<span>${G.lang==='id'?'contoh data':'sample data'}</span></h4>${fr.map((f,k)=>`<div class="${f.me?'me':''}"><span class="rk">${k+1}</span><span>${esc(f.n)}</span><span class="st">${'★'.repeat(f.s)||'0'}</span><span>${fmtSec(f.t)}</span></div>`).join('')}</div>
+  <div class="lb" id="lb"><h4>${G.lang==='id'?'Papan teman hari ini':"Friends today"}<span>${G.lang==='id'?'contoh data':'sample data'}</span></h4>${fr.map((f,k)=>`<div class="${f.me?'me':''}"><span class="rk">${k+1}</span><span>${esc(f.n)}</span><span class="st">${'★'.repeat(f.s)||'0'}</span><span>${fmtSec(f.t)}</span></div>`).join('')}</div>
   <div class="nextc">${G.lang==='id'?'Kasus berikutnya dalam':'Next case in'}<b id="cd">--:--:--</b></div>
   <div><p class="fine" style="margin:0 0 8px">${G.lang==='id'?'Arsip kasus':'Case archive'}</p>${(()=>{const ids=archIds();return ids.length?`<div class="arch">${ids.map(k=>`<button data-a="dcArch" data-v="${k}">${esc(t(DC[k].title))}</button>`).join('')}</div>`:`<p class="fine" style="margin:0">${G.lang==='id'?'Kasus yang sudah lewat akan muncul di sini mulai besok.':'Past cases appear here from tomorrow.'}</p>`})()}</div>
   <button class="btn" data-a="toMenu">${esc(t(U.toMenu))}</button>`,'dres');
   for(let i=0;i<stars;i++)setTimeout(()=>{SFX.star(i);buzz(25)},200+i*350);
+  if(SHEET_URL&&!d.archive)liveBoard(d.no,stars,Math.round(d.time),d.wrong);
+  if(!d.archive)track('daily',{lv:'harian',x:String(d.no),stars});
   clearInterval(G.cdT);const tickCd=()=>{const el=$('#cd');if(!el)return clearInterval(G.cdT);let s=Math.max(0,Math.floor((mid-Date.now())/1000));el.textContent=[Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(v=>String(v).padStart(2,'0')).join(':')};tickCd();G.cdT=setInterval(tickCd,1000);
 }
 function dcShare(){
@@ -2701,6 +2735,48 @@ function dcShare(){
 }
 
 const IG_URL='https://instagram.com/ahmddzul',SAW_URL='https://saweria.co/ahmddzul';
+/* Google Sheet (Apps Script web app). Kosong = papan skor contoh, tanpa statistik. */
+const SHEET_URL='';
+function uid(){try{let v=localStorage.getItem('lastseen.id');if(!v){v=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('lastseen.id',v)}return v}catch(e){return 'anon'}}
+function track(e,o){if(!SHEET_URL)return;try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain'},body:JSON.stringify(Object.assign({a:'ev',e,id:uid(),lang:G.lang},o||{}))}).catch(()=>{})}catch(x){}}
+async function sheetCall(body){const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.json()}
+function annHtml(){const c=G.cfg;if(!c||!c.ann||SAVE.annSeen===c.annId)return '';
+  return `<div class="ann" role="status"><span>${esc(c.ann)}</span><button data-a="annX" aria-label="${G.lang==='id'?'Tutup pengumuman':'Dismiss announcement'}">${I.x}</button></div>`}
+async function loadCfg(){if(!SHEET_URL||G.cfgTried)return;G.cfgTried=1;
+  try{G.cfg=await sheetCall({a:'cfg'});if(G.scene==='menu'&&G.cfg.ann&&!$('.ann')){const h=$('.hm-hook');if(h)h.insertAdjacentHTML('beforebegin',annHtml())}}catch(e){}}
+function rateHtml(lv){if(!SHEET_URL||lv==='prolog')return '';const id=G.lang==='id';const done=(SAVE.rated||{})[lv];
+  if(done)return `<p class="fine rate-done">${id?'Terima kasih atas ulasanmu.':'Thanks for your review.'}</p>`;
+  return `<div class="rate"><p>${id?'Bagaimana bab ini?':'How was this chapter?'}</p><div class="rate-stars" role="group" aria-label="${id?'Beri nilai 1 sampai 5':'Rate 1 to 5'}">${[1,2,3,4,5].map(n=>`<button data-a="rate" data-lv="${lv}" data-v="${n}" aria-label="${n} ${id?'bintang':'stars'}">★</button>`).join('')}</div></div>`}
+function openRate(lv,n){G.rate={lv,n};const id=G.lang==='id';
+  sheet(`<header><h3>${lv==='umum'?(id?'Ulasan untuk Last Seen':'Review Last Seen'):(id?'Ulasan untuk '+t(LV[lv].no):'Review '+t(LV[lv].no))}</h3><button class="x" data-a="closeSheet" aria-label="${esc(t(U.close))}">${I.x}</button></header>
+  <div class="rate-stars big" role="group" aria-label="${id?'Nilai':'Rating'}">${[1,2,3,4,5].map(k=>`<button data-a="rateStar" data-v="${k}" aria-pressed="${k<=n}" aria-label="${k} ${id?'bintang':'stars'}">★</button>`).join('')}</div>
+  <label class="rate-l" for="rtx">${id?'Ceritakan sedikit (boleh dikosongkan)':'Tell us a little (optional)'}</label>
+  <textarea id="rtx" maxlength="400" rows="4" placeholder="${id?'Bagian yang paling kamu suka, atau yang membingungkan':'What you liked most, or what confused you'}"></textarea>
+  <button class="btn pri" data-a="rateSend" id="rsend" ${n?'':'disabled'}>${id?'Kirim ulasan':'Send review'}</button>
+  <p class="fine" style="margin:0">${id?'Ulasan dibaca langsung oleh pembuat game. Jangan tulis data pribadi.':'Reviews are read by the maker. Please leave out personal details.'}</p>`)}
+function setRateStar(n){if(!G.rate)return;G.rate.n=n;$$('.rate-stars.big button').forEach((b,k)=>b.setAttribute('aria-pressed',String(k<n)));const b=$('#rsend');if(b)b.disabled=false;SFX.tap()}
+async function sendRate(){const R=G.rate;if(!R||!R.n)return;const b=$('#rsend');const x=($('#rtx')||{}).value||'';if(b){b.disabled=true;b.textContent=G.lang==='id'?'Mengirim…':'Sending…'}
+  try{const res=await sheetCall({a:'review',lv:R.lv,r:R.n,x,id:uid(),lang:G.lang});if(!res.ok)throw 0;
+    SAVE.rated=SAVE.rated||{};SAVE.rated[R.lv]=R.n;persist();closeSheet();toast(G.lang==='id'?'Terima kasih. Ulasanmu sudah terkirim.':'Thank you. Your review was sent.');
+    const r=$('.rate');if(r)r.outerHTML=`<p class="fine rate-done">${G.lang==='id'?'Terima kasih atas ulasanmu.':'Thanks for your review.'}</p>`}
+  catch(e){if(b){b.disabled=false;b.textContent=G.lang==='id'?'Coba kirim lagi':'Try again'}toast(G.lang==='id'?'Belum terkirim. Periksa koneksi.':'Not sent. Check your connection.')}}
+function lbRows(list,me){return list.map((f,k)=>`<div class="${f.me?'me':''}"><span class="rk">${k+1}</span><span>${esc(f.n)}</span><span class="st">${'★'.repeat(f.s)||'0'}</span><span>${fmtSec(f.t)}</span></div>`).join('')}
+async function liveBoard(no,stars,time,wrong){
+  const box=$('#lb');if(!box)return;const id=G.lang==='id';
+  const head=(extra)=>`<h4>${id?'Papan skor hari ini':"Today's leaderboard"}<span>${extra||''}</span></h4>`;
+  box.innerHTML=head(id?'memuat…':'loading…');
+  try{
+    if(SAVE.nick&&!(SAVE.sent||{})[no]){await sheetCall({a:'score',no,n:SAVE.nick,s:stars,t:time,w:wrong,id:uid()});SAVE.sent=SAVE.sent||{};SAVE.sent[no]=1;persist()}
+    const res=await sheetCall({a:'top',no,id:uid()});if(!$('#lb'))return;
+    const list=(res.top||[]).map(f=>Object.assign({},f,{me:SAVE.nick&&f.n===SAVE.nick&&f.mine}));
+    let h=head(id?`${res.total||0} pemain`:`${res.total||0} players`)+(list.length?lbRows(list):`<p class="lb-empty">${id?'Belum ada yang masuk papan. Jadilah yang pertama.':'Nobody on the board yet. Be the first.'}</p>`);
+    if(res.rank&&res.rank>list.length)h+=`<div class="me"><span class="rk">${res.rank}</span><span>${esc(SAVE.nick)}</span><span class="st">${'★'.repeat(stars)||'0'}</span><span>${fmtSec(time)}</span></div>`;
+    if(!SAVE.nick)h+=`<form class="lb-join" data-no="${no}"><label for="nick">${id?'Nama panggilan untuk papan skor':'Nickname for the leaderboard'}</label><div><input id="nick" maxlength="12" autocomplete="nickname" placeholder="${id?'maks. 12 huruf':'max 12 letters'}" required><button class="btn pri" type="submit">${id?'Masuk':'Join'}</button></div><small>${id?'Hanya nama panggilan yang disimpan, bersama skor harianmu.':'Only your nickname is stored, with your daily score.'}</small></form>`;
+    box.innerHTML=h;
+    const f=box.querySelector('.lb-join');
+    if(f)f.addEventListener('submit',ev=>{ev.preventDefault();const v=f.querySelector('input').value.replace(/[^\p{L}\p{N} _.]/gu,'').trim().slice(0,12);if(!v)return;SAVE.nick=v;persist();liveBoard(no,stars,time,wrong)});
+  }catch(e){if($('#lb'))box.innerHTML=head(id?'offline':'offline')+`<p class="lb-empty">${id?'Papan skor belum bisa dimuat. Coba lagi nanti.':"Couldn't load the leaderboard. Try again later."}</p>`}
+}
 const IC_IG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg>';
 const creditHtml=()=>`<a class="credit" href="${IG_URL}" target="_blank" rel="noopener">${IC_IG}<span>${G.lang==='id'?'Dibuat oleh':'Made by'} @ahmddzul</span></a>`;
 const sawHtml=()=>`<a class="saw" href="${SAW_URL}" target="_blank" rel="noopener">${G.lang==='id'?'Dukung di Saweria':'Support on Saweria'}</a>`;
@@ -2739,15 +2815,16 @@ function rainSound(on){
 }
 function thunder(){if(!G.audioOn)return;const c=ctx();if(!c)return;try{const s=c.createBufferSource();s.buffer=noiseBuf(c,3);const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=160;const g=c.createGain();const t0=c.currentTime;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.7,t0+.08);g.gain.exponentialRampToValueAtTime(.0001,t0+2.8);s.connect(f).connect(g).connect(c.destination);s.start(t0);s.stop(t0+3)}catch(e){}buzz(60)}
 
-function showWelcome(){
+function showWelcome(quick){
   G.scene='welcome';
   const d=scene(`<div class="wl-in">
     <p class="wl-pre">${G.lang==='id'?'Hujan sejak sore. Di peron 2 Stasiun Bogor, sebuah HP berdering tanpa pemilik.':'Rain since the afternoon. On platform 2 at Bogor Station, a phone keeps ringing with no owner.'}</p>
     <h1 class="wordmark wl-title">last<br><b>seen</b></h1>
     <p class="wl-status"><b>Nadia</b> · ${G.lang==='id'?'terakhir dilihat Jum pukul 19.12':'last seen Fri at 19:12'}</p>
+    <div class="seg wl-lang" role="group" aria-label="Bahasa / Language"><button data-a="wlLang" data-v="id" aria-pressed="${G.lang==='id'}">Indonesia</button><button data-a="wlLang" data-v="en" aria-pressed="${G.lang==='en'}">English</button></div>
     <button class="wl-tap" data-a="enter">${G.lang==='id'?'Ketuk untuk masuk':'Tap to enter'}</button>
     <p class="fine" style="color:#a7afc0">${esc(t(U.phones))}</p></div>`,'welcome');
-  d.dataset.a='enter';fxMount(d);
+  d.dataset.a='enter';if(quick)d.classList.add('quick');fxMount(d);
 }
 function enterHome(){ctx();G.audioOn=true;if(SAVE.sound)rainSound(true);showMenu()}
 function nextStory(){
@@ -2770,6 +2847,7 @@ function showMenu(){
     <header class="hm-top"><div class="hm-brand"><h1 class="hm-word">last seen</h1><span class="hm-st" id="lst">${lsTxt}</span></div>
       <button class="hm-ib" data-a="fxM" aria-pressed="${!!SAVE.fx}" aria-label="${G.lang==='id'?'Efek hujan':'Rain effect'}">${IC_RAIN}</button>
       <button class="hm-ib" data-a="settings" aria-label="${G.lang==='id'?'Pengaturan':'Settings'}">${IC_GEAR}</button></header>
+    ${annHtml()}
     <p class="hm-hook">${G.lang==='id'?'Nadia tidak pulang sejak Jumat malam.':"Nadia hasn't come home since Friday night."}<span>${G.lang==='id'?'HP-nya ditemukan di peron stasiun. Kamu kakaknya, dan kamu yang memegang HP itu sekarang.':"Her phone was found on a station platform. You're her brother, and now the phone is in your hands."}</span></p>
     <button class="hm-main" data-a="menuPlay" data-tab="${G.lang==='id'?'Berkas 01 · Nadia Pratama':'Case 01 · Nadia Pratama'}">
       <span class="hm-ey">${esc(t(n.ey))}</span>
@@ -2783,6 +2861,7 @@ function showMenu(){
     <div class="hm-row"><button data-a="levels">${G.lang==='id'?'Semua bab':'All chapters'}</button><button data-a="howto">${esc(t(U.howto))}</button></div>
     <p class="hm-foot">${esc(t(U.phones))}</p>
     <div class="hm-credits">${creditHtml()}${sawHtml()}</div>`,'menu');
+  loadCfg();
   fxMount(d);if(G.audioOn&&SAVE.sound)rainSound(true);
   const el=$('#lst',d);let on=false;clearInterval(showMenu._i);
   showMenu._i=setInterval(()=>{if(!document.body.contains(el))return clearInterval(showMenu._i);on=!on;el.classList.toggle('on',on);el.textContent=on?'online':lsTxt},2600);
@@ -2792,6 +2871,7 @@ function openSettings(){
   <div class="setrow"><span>${esc(t(U.lang))}</span><div class="seg"><button data-a="langM" data-v="id" aria-pressed="${G.lang==='id'}">Indonesia</button><button data-a="langM" data-v="en" aria-pressed="${G.lang==='en'}">English</button></div></div>
   <div class="setrow"><span>${esc(t(U.sound))}</span><div class="seg"><button data-a="sndM" data-v="1" aria-pressed="${!!SAVE.sound}">${esc(t(U.on))}</button><button data-a="sndM" data-v="0" aria-pressed="${!SAVE.sound}">${esc(t(U.off))}</button></div></div>
   <div class="setrow"><span>${G.lang==='id'?'Efek hujan dan kilat':'Rain and lightning'}</span><div class="seg"><button data-a="fxSet" data-v="1" aria-pressed="${!!SAVE.fx}">${esc(t(U.on))}</button><button data-a="fxSet" data-v="0" aria-pressed="${!SAVE.fx}">${esc(t(U.off))}</button></div></div>
+  ${SHEET_URL?`<button class="btn" data-a="rateOpen" data-v="umum">${G.lang==='id'?'Kirim ulasan untuk Last Seen':'Review Last Seen'}</button>`:''}
   <div class="about"><p>${G.lang==='id'?'Last Seen dikerjakan oleh satu orang dan gratis dimainkan.':'Last Seen is made by one person and free to play.'}</p>${creditHtml()}${sawHtml()}</div>`);
 }
 function setFx(on){SAVE.fx=on;persist();if(on){fxStart()}else{fxStop();fxDraw(false)}const b=$('.hm-ib[data-a="fxM"]');if(b)b.setAttribute('aria-pressed',String(on))}

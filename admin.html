@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Last Seen Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#0b0d12;--panel:#151821;--panel2:#1c2030;--line:rgba(255,255,255,.09);
+  --fg:#eef0f5;--mute:#a3a9b8;--faint:#7c8396;--gold:#e9b949;--alert:#ff6b5e;--ok:#4cd07d;--blue:#5aa9ff;
+  --f:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--f-type:"Courier Prime","Courier New",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f);min-height:100vh;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:8px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{margin:0;font-family:var(--f-type);font-size:24px;font-weight:400;letter-spacing:-.01em}
+.brand h1 b{font-weight:700}
+.brand small{color:var(--faint);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.btn{min-height:44px;padding:0 16px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.pri{background:var(--fg);color:#0b0d12;border-color:transparent}
+.btn.warn{color:var(--alert)}
+.btn:disabled{opacity:.5;cursor:default}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);white-space:nowrap;color:var(--mute);font-weight:600;font-size:14px;position:relative}
+.tabs button[aria-selected="true"]{background:var(--fg);color:#0b0d12;border-color:transparent}
+.tabs .dot{display:inline-block;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--alert);color:#fff;font-size:11px;line-height:18px;margin-left:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}
+.kpi small{display:block;color:var(--faint);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.kpi b{display:block;font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi span{color:var(--mute);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
+.card h2{margin:0 0 4px;font-size:16px}
+.card p.sub{margin:0 0 14px;color:var(--mute);font-size:13.5px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.fun{display:flex;flex-direction:column;gap:10px}
+.fun .row{display:grid;grid-template-columns:72px 1fr 64px;gap:10px;align-items:center;font-size:13.5px}
+.fun .bar{height:22px;border-radius:6px;background:var(--panel2);position:relative;overflow:hidden}
+.fun .bar i{position:absolute;inset:0 auto 0 0;background:#3b4560;border-radius:6px}
+.fun .bar em{position:absolute;inset:0 auto 0 0;background:var(--gold);border-radius:6px}
+.fun .num{text-align:right;font-variant-numeric:tabular-nums;color:var(--mute)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin-top:12px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.days{display:flex;align-items:flex-end;gap:4px;height:130px;padding-top:8px}
+.days div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;height:100%;justify-content:flex-end}
+.days i{width:100%;max-width:26px;background:var(--blue);border-radius:4px 4px 0 0;min-height:2px}
+.days small{font-size:10.5px;color:var(--faint)}
+.split{display:flex;height:28px;border-radius:8px;overflow:hidden;background:var(--panel2)}
+.split div{display:grid;place-items:center;font-size:12.5px;font-weight:700;color:#0b0d12;min-width:0;overflow:hidden}
+.dist{display:flex;flex-direction:column;gap:6px}
+.dist .row{display:grid;grid-template-columns:28px 1fr 36px;gap:8px;align-items:center;font-size:13px}
+.dist .bar{height:12px;border-radius:6px;background:var(--panel2);overflow:hidden}
+.dist .bar i{display:block;height:100%;background:var(--gold)}
+.tbl{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--line);white-space:nowrap}
+th{background:var(--panel2);font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;border-top:0}
+td.r,th.r{text-align:right}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;background:var(--panel2);color:var(--mute)}
+.tag.hard{background:rgba(255,107,94,.16);color:#ff9d93}
+.tag.easy{background:rgba(76,208,125,.16);color:#8fe3ae}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters select,.filters input{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);padding:0 12px}
+.rv{display:flex;flex-direction:column;gap:10px}
+.rv article{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.rv article.disembunyikan{opacity:.5}
+.rv article.disorot{border-color:rgba(233,185,73,.5)}
+.rv .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--faint)}
+.rv .stars{color:var(--gold);letter-spacing:1px;font-size:14px}
+.rv p{margin:0;white-space:pre-wrap;word-break:break-word}
+.rv p.empty{color:var(--faint);font-style:italic}
+.rv .act{display:flex;gap:6px;flex-wrap:wrap}
+.rv .act .btn{min-height:36px;padding:0 12px;font-size:13px;border-radius:10px}
+.new{background:var(--alert);color:#fff}
+form.stack,.stack{display:flex;flex-direction:column;gap:10px}
+label{font-weight:600;font-size:14px}
+input[type=password],input[type=text],textarea{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);padding:10px 12px}
+textarea{min-height:90px;resize:vertical}
+.check{display:flex;gap:10px;align-items:center;font-weight:500;min-height:44px}
+.check input{width:20px;height:20px}
+.login{max-width:380px;margin:12vh auto 0;display:flex;flex-direction:column;gap:18px}
+.err{color:#ff9d93;font-size:14px;margin:0}
+.note{color:var(--mute);font-size:13.5px;margin:0}
+.empty-state{color:var(--mute);text-align:center;padding:28px 10px}
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:#0b0d12;padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;z-index:9}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips span{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 10px;border-radius:999px;background:var(--panel2);font-size:13px}
+.chips button{width:28px;height:28px;border-radius:50%;color:var(--mute)}
+[hidden]{display:none!important}
+@media (max-width:420px){.kpi b{font-size:24px}.fun .row{grid-template-columns:58px 1fr 54px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="login" id="login">
+    <div class="brand"><h1>last <b>seen</b></h1><small>Admin</small></div>
+    <form class="stack" id="loginForm">
+      <label for="key">Kunci admin</label>
+      <input id="key" type="password" autocomplete="current-password" required>
+      <label class="check"><input type="checkbox" id="remember"> Ingat di perangkat ini</label>
+      <button class="btn pri" type="submit" id="loginBtn">Masuk</button>
+      <p class="err" id="loginErr" hidden></p>
+      <p class="note" id="noUrl" hidden>Alamat Apps Script belum dipasang di halaman ini.</p>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <div class="top">
+      <div class="brand"><h1>last <b>seen</b></h1><small>Admin</small></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="refresh" aria-label="Muat ulang data">Muat ulang</button>
+        <button class="btn" id="logout">Keluar</button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Menu admin">
+      <button role="tab" data-tab="sum" aria-selected="true">Ringkasan</button>
+      <button role="tab" data-tab="story">Cerita</button>
+      <button role="tab" data-tab="rev">Ulasan<span class="dot" id="revDot" hidden></span></button>
+      <button role="tab" data-tab="daily">Kasus Harian</button>
+      <button role="tab" data-tab="board">Papan Skor</button>
+      <button role="tab" data-tab="ann">Pengumuman</button>
+      <button role="tab" data-tab="help">Bantuan</button>
+    </nav>
+    <main id="view" style="margin-top:14px"></main>
+  </section>
+</div>
+
+<script>
+/* Alamat Web app Apps Script (berakhiran /exec). Sama dengan SHEET_URL di index.html. */
+const SHEET_URL='';
+const LVN={prolog:'Prolog',bab1:'Bab 1',bab2:'Bab 2',bab3:'Bab 3',bab4:'Bab 4',bab5:'Bab 5',umum:'Umum'};
+const CASES=['Seblak yang Hilang','Bukti Transfer','Dompet Pak Darto','Bansos Rp600 Ribu','Kunci Gudang','Struk Titipan','Bensin Motor'];
+const caseName=no=>CASES[((no-1)%CASES.length+CASES.length)%CASES.length]||'';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtT=s=>{s=Math.round(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const fmtD=ms=>new Date(ms).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const num=n=>Number(n||0).toLocaleString('id-ID');
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+let KEY='',TAB='sum',STATS=null,REV=null,CACHE={};
+
+function store(){try{return localStorage.getItem('ls.admin')||sessionStorage.getItem('ls.admin')||''}catch(e){return ''}}
+function save(k,rem){try{(rem?localStorage:sessionStorage).setItem('ls.admin',k)}catch(e){}}
+function forget(){try{localStorage.removeItem('ls.admin');sessionStorage.removeItem('ls.admin')}catch(e){}}
+function toast(m){const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2400)}
+
+async function api(op,extra){
+  const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(Object.assign({a:'admin',key:KEY,op},extra||{}))});
+  const j=await r.json();if(!j.ok&&j.err==='key'){logout(true);throw new Error('key')}return j;
+}
+
+async function login(k,rem){
+  KEY=k;$('#loginBtn').disabled=true;$('#loginErr').hidden=true;
+  try{STATS=await api('stats');save(k,rem);$('#login').hidden=true;$('#app').hidden=false;show(TAB)}
+  catch(e){$('#loginErr').textContent=e.message==='key'?'Kunci admin salah.':'Tidak bisa terhubung ke Apps Script. Periksa koneksi atau alamatnya.';$('#loginErr').hidden=false}
+  finally{$('#loginBtn').disabled=false}
+}
+function logout(bad){forget();KEY='';$('#app').hidden=true;$('#login').hidden=false;if(bad){$('#loginErr').textContent='Kunci admin salah atau sudah diganti.';$('#loginErr').hidden=false}}
+
+function show(tab){
+  TAB=tab;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
+  const f={sum:vSum,story:vStory,rev:vRev,daily:vDaily,board:vBoard,ann:vAnn,help:vHelp}[tab];
+  const dot=$('#revDot');if(STATS&&STATS.reviews.fresh){dot.textContent=STATS.reviews.fresh;dot.hidden=false}else dot.hidden=true;
+  f();
+}
+const V=h=>{$('#view').innerHTML=h};
+
+/* ---------- Ringkasan ---------- */
+function vSum(){
+  const S=STATS,f=S.funnel,pro=f[0],b5=f[5];
+  const max=Math.max(1,...S.days.map(d=>d.p));
+  V(`<div class="grid">
+    <div class="kpi"><small>Pemain unik</small><b>${num(S.players)}</b><span>sejak awal</span></div>
+    <div class="kpi"><small>Hari ini</small><b>${num(S.todayPlayers)}</b><span>pemain aktif</span></div>
+    <div class="kpi"><small>Tamat Season 1</small><b>${num(b5.finish)}</b><span>${pct(b5.finish,pro.start)}% dari yang mulai</span></div>
+    <div class="kpi"><small>Kasus Harian</small><b>${num(S.daily)}</b><span>kali dimainkan</span></div>
+    <div class="kpi"><small>Rating</small><b>${S.reviews.n?S.reviews.avg.toFixed(1)+' ★':'-'}</b><span>${num(S.reviews.n)} ulasan${S.reviews.fresh?`, ${S.reviews.fresh} baru`:''}</span></div>
+  </div>
+  <div class="two" style="margin-top:12px">
+    <div class="card"><h2>Pemain aktif 14 hari</h2><p class="sub">Jumlah pemain unik per hari (${esc(S.tz)}).</p>
+      <div class="days" role="img" aria-label="Grafik pemain aktif per hari">${S.days.map(d=>`<div title="${d.d}: ${d.p} pemain"><i style="height:${Math.max(2,d.p/max*100)}%"></i><small>${d.d.slice(8)}</small></div>`).join('')}</div></div>
+    <div class="card"><h2>Bahasa dan mode</h2><p class="sub">Pilihan pemain saat bermain.</p>
+      ${split([[S.lang.id,'Indonesia','#e9b949'],[S.lang.en,'English','#5aa9ff']])}
+      <div style="height:12px"></div>
+      ${split([[S.modes.story,'Cerita','#8fe3ae'],[S.modes.detective,'Detektif','#ff9d93']])}
+      <p class="note" style="margin-top:10px">Mode dihitung dari setiap kali bab dimulai.</p></div>
+  </div>`);
+}
+function split(parts){const tot=parts.reduce((a,p)=>a+p[0],0);if(!tot)return '<p class="note">Belum ada data.</p>';
+  return `<div class="split">${parts.map(p=>p[0]?`<div style="width:${p[0]/tot*100}%;background:${p[2]}">${pct(p[0],tot)}%</div>`:'').join('')}</div>
+  <div class="legend">${parts.map(p=>`<span style="--c:${p[2]}">${p[1]} · ${num(p[0])}</span>`).join('')}</div>`}
+
+/* ---------- Cerita ---------- */
+function vStory(){
+  const S=STATS,f=S.funnel,max=Math.max(1,...f.map(x=>x.start));
+  const e=S.endings,c=S.choice;
+  V(`<div class="card"><h2>Perjalanan pemain per bab</h2><p class="sub">Berapa pemain unik yang memulai dan menamatkan setiap bab. Bab dengan selisih besar adalah tempat pemain berhenti.</p>
+    <div class="fun">${f.map(x=>`<div class="row"><b>${LVN[x.lv]}</b><div class="bar" title="Mulai ${x.start}, tamat ${x.finish}"><i style="width:${x.start/max*100}%"></i><em style="width:${x.finish/max*100}%"></em></div><span class="num">${num(x.finish)}/${num(x.start)}</span></div>`).join('')}</div>
+    <div class="legend"><span style="--c:#3b4560">Mulai</span><span style="--c:#e9b949">Tamat</span></div></div>
+  <div class="tbl" style="margin-top:12px"><table><thead><tr><th>Bab</th><th class="r">Mulai</th><th class="r">Tamat</th><th class="r">Tingkat tamat</th><th class="r">Gagal</th><th class="r">★1</th><th class="r">★2</th><th class="r">★3</th></tr></thead><tbody>
+    ${f.map(x=>{const r=pct(x.finish,x.start);return `<tr><td>${LVN[x.lv]}</td><td class="r">${num(x.start)}</td><td class="r">${num(x.finish)}</td><td class="r">${x.start?`<span class="tag ${r<50?'hard':r>85?'easy':''}">${r}%</span>`:'-'}</td><td class="r">${num(x.fail)}</td><td class="r">${num(x.stars[0])}</td><td class="r">${num(x.stars[1])}</td><td class="r">${num(x.stars[2])}</td></tr>`}).join('')}
+  </tbody></table></div>
+  <div class="two" style="margin-top:12px">
+    <div class="card"><h2>Pilihan di Bab 3</h2><p class="sub">Petunjuk Sukabumi dikirim ke mana.</p>${split([[c.leak,'Grup relawan','#ff9d93'],[c.quiet,'Hanya polisi','#8fe3ae']])}</div>
+    <div class="card"><h2>Ending</h2><p class="sub">Terlambat hanya bisa terjadi di mode Detektif.</p>${split([[e.home,'Pulang','#8fe3ae'],[e.two,'Dua Rumah','#e9b949'],[e.late,'Terlambat','#ff9d93']])}</div>
+  </div>`);
+}
+
+/* ---------- Ulasan ---------- */
+async function vRev(){
+  const S=STATS.reviews,mx=Math.max(1,...S.dist);
+  V(`<div class="two"><div class="card"><h2>Rata-rata ${S.n?S.avg.toFixed(1):'-'} ★</h2><p class="sub">${num(S.n)} ulasan.</p>
+    <div class="dist">${[5,4,3,2,1].map(k=>`<div class="row"><span>${k}★</span><div class="bar"><i style="width:${S.dist[k-1]/mx*100}%"></i></div><span class="num">${num(S.dist[k-1])}</span></div>`).join('')}</div></div>
+    <div class="card"><h2>Saring</h2><div class="filters" style="margin:10px 0 0">
+      <select id="fLv" aria-label="Bab"><option value="">Semua bab</option>${Object.keys(LVN).filter(k=>k!=='prolog').map(k=>`<option value="${k}">${LVN[k]}</option>`).join('')}</select>
+      <select id="fR" aria-label="Rating"><option value="">Semua rating</option>${[5,4,3,2,1].map(k=>`<option value="${k}">${k} bintang</option>`).join('')}</select>
+      <select id="fSt" aria-label="Status"><option value="">Semua status</option><option value="baru">Baru</option><option value="disorot">Disorot</option><option value="dibaca">Dibaca</option><option value="disembunyikan">Disembunyikan</option></select>
+      <label class="check"><input type="checkbox" id="fTx"> Hanya yang ada teks</label></div></div></div>
+    <div class="rv" id="rvList" style="margin-top:12px"><p class="empty-state">Memuat ulasan…</p></div>`);
+  ['fLv','fR','fSt','fTx'].forEach(id=>$('#'+id).addEventListener('change',drawRev));
+  try{REV=(await api('reviews')).list;drawRev()}catch(e){if(e.message!=='key')$('#rvList').innerHTML='<p class="empty-state">Ulasan belum bisa dimuat.</p>'}
+}
+function drawRev(){
+  if(!REV)return;const lv=$('#fLv').value,r=$('#fR').value,st=$('#fSt').value,tx=$('#fTx').checked;
+  const L=REV.filter(x=>(!lv||x.lv===lv)&&(!r||x.r==r)&&(!st||(st==='baru'?!x.st:x.st===st))&&(!tx||x.x));
+  $('#rvList').innerHTML=L.length?L.map(x=>`<article class="${esc(x.st)}" data-row="${x.row}">
+    <div class="meta"><span class="stars" aria-label="${x.r} bintang">${'★'.repeat(x.r)}${'☆'.repeat(5-x.r)}</span><span class="tag">${LVN[x.lv]||esc(x.lv)}</span><span>${fmtD(x.t)}</span><span>${x.lang==='en'?'EN':'ID'}</span>${x.st?`<span class="tag">${esc(x.st)}</span>`:'<span class="tag new">baru</span>'}</div>
+    ${x.x?`<p>${esc(x.x)}</p>`:'<p class="empty">Tanpa teks.</p>'}
+    <div class="act">${x.st!=='dibaca'?`<button class="btn" data-st="dibaca">Tandai dibaca</button>`:''}${x.st!=='disorot'?`<button class="btn" data-st="disorot">Sorot</button>`:''}${x.st!=='disembunyikan'?`<button class="btn warn" data-st="disembunyikan">Sembunyikan</button>`:`<button class="btn" data-st="">Tampilkan lagi</button>`}</div>
+  </article>`).join(''):'<p class="empty-state">Tidak ada ulasan yang cocok.</p>';
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-st]');if(!b)return;
+  const art=b.closest('article'),row=+art.dataset.row,st=b.dataset.st;b.disabled=true;
+  try{await api('review_set',{row,status:st});const x=REV.find(v=>v.row===row);const was=x.st;x.st=st;
+    if(!was&&st)STATS.reviews.fresh=Math.max(0,STATS.reviews.fresh-1);if(was&&!st)STATS.reviews.fresh++;
+    drawRev();const dot=$('#revDot');dot.textContent=STATS.reviews.fresh;dot.hidden=!STATS.reviews.fresh}
+  catch(err){b.disabled=false;toast('Gagal menyimpan.')}
+});
+
+/* ---------- Kasus Harian ---------- */
+function vDaily(){
+  const C=STATS.cases;
+  V(`<div class="card"><h2>Kesulitan Kasus Harian</h2><p class="sub">Dari skor yang masuk papan. Kasus dengan rata-rata bintang di bawah 1,8 terlalu sulit; di atas 2,6 terlalu mudah.</p>
+  ${C.length?`<div class="tbl"><table><thead><tr><th>Kasus</th><th>Judul</th><th class="r">Pemain</th><th class="r">Rata-rata ★</th><th class="r">Rata-rata waktu</th><th class="r">3 bintang</th><th>Catatan</th></tr></thead><tbody>
+  ${C.map(c=>`<tr><td>#${c.no}</td><td>${esc(caseName(c.no))}</td><td class="r">${num(c.n)}</td><td class="r">${String(c.avgS).replace('.',',')}</td><td class="r">${fmtT(c.avgT)}</td><td class="r">${c.pct3}%</td><td>${c.avgS<1.8?'<span class="tag hard">sulit</span>':c.avgS>2.6?'<span class="tag easy">mudah</span>':'<span class="tag">pas</span>'}</td></tr>`).join('')}
+  </tbody></table></div>`:'<p class="empty-state">Belum ada skor Kasus Harian.</p>'}</div>
+  <p class="note" style="margin-top:12px">Kasus berputar setiap 7 hari. Kasus #8 memakai soal yang sama dengan #1, dan seterusnya.</p>`);
+}
+
+/* ---------- Papan skor ---------- */
+async function vBoard(){
+  const nos=STATS.cases.map(c=>c.no);
+  V(`<div class="card"><h2>Papan skor</h2><p class="sub">Hapus skor yang mencurigakan, atau blokir nama yang tidak pantas. Nama yang diblokir tidak bisa masuk papan lagi.</p>
+    <div class="filters"><select id="bNo" aria-label="Kasus">${nos.length?nos.map(n=>`<option value="${n}">Kasus #${n} · ${esc(caseName(n))}</option>`).join(''):'<option value="0">Belum ada kasus</option>'}</select></div>
+    <div id="bList"></div></div>`);
+  $('#bNo').addEventListener('change',loadBoard);if(nos.length)loadBoard();else $('#bList').innerHTML='<p class="empty-state">Belum ada skor.</p>';
+}
+async function loadBoard(){
+  const no=+$('#bNo').value;$('#bList').innerHTML='<p class="empty-state">Memuat…</p>';
+  try{const L=(await api('scores',{no})).list;
+    $('#bList').innerHTML=L.length?`<div class="tbl"><table><thead><tr><th>#</th><th>Nama</th><th class="r">★</th><th class="r">Waktu</th><th class="r">Salah</th><th>Masuk</th><th></th></tr></thead><tbody>
+    ${L.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.n)}</td><td class="r">${x.s}</td><td class="r">${fmtT(x.sec)}</td><td class="r">${x.w}</td><td>${fmtD(x.t)}</td><td><button class="btn warn" style="min-height:36px" data-del="${x.row}" data-pid="${esc(x.pid)}" data-name="${esc(x.n)}">Hapus</button> <button class="btn" style="min-height:36px" data-ban="${esc(x.n)}">Blokir nama</button></td></tr>`).join('')}
+    </tbody></table></div>`:'<p class="empty-state">Belum ada skor untuk kasus ini.</p>'}
+  catch(e){if(e.message!=='key')$('#bList').innerHTML='<p class="empty-state">Papan skor belum bisa dimuat.</p>'}
+}
+document.addEventListener('click',async e=>{
+  const d=e.target.closest('[data-del]');const bn=e.target.closest('[data-ban]');
+  if(d){if(d.dataset.confirm!=='1'){d.dataset.confirm='1';d.textContent='Yakin hapus?';setTimeout(()=>{if(d.isConnected){d.dataset.confirm='';d.textContent='Hapus'}},3000);return}
+    d.disabled=true;try{const r=await api('score_del',{row:+d.dataset.del,pid:d.dataset.pid});toast(r.ok?'Skor dihapus.':'Data berubah, muat ulang dulu.');loadBoard()}catch(err){toast('Gagal menghapus.')}}
+  if(bn){bn.disabled=true;try{await api('ban',{name:bn.dataset.ban});toast('Nama "'+bn.dataset.ban+'" diblokir.')}catch(err){bn.disabled=false;toast('Gagal memblokir.')}}
+});
+
+/* ---------- Pengumuman ---------- */
+async function vAnn(){
+  V(`<div class="card"><h2>Pengumuman di beranda game</h2><p class="sub">Tampil sebagai pita kecil di beranda. Pemain bisa menutupnya, dan pengumuman baru akan muncul lagi.</p>
+    <form class="stack" id="annForm"><label for="annTx">Teks (maks. 200 huruf)</label><textarea id="annTx" maxlength="200" placeholder="Contoh: Season 2 rilis Sabtu ini pukul 19.00. Siapkan headphone."></textarea>
+    <label class="check"><input type="checkbox" id="annOn"> Tampilkan di game</label>
+    <button class="btn pri" type="submit">Simpan pengumuman</button></form></div>
+    <div class="card" style="margin-top:12px"><h2>Nama yang diblokir</h2><p class="sub">Ketuk × untuk membuka blokir.</p><div class="chips" id="banList"></div></div>`);
+  try{const r=await api('ann_get');$('#annTx').value=r.ann;$('#annOn').checked=r.on;drawBans(r.banned)}catch(e){}
+  $('#annForm').addEventListener('submit',async ev=>{ev.preventDefault();try{await api('ann_set',{ann:$('#annTx').value,on:$('#annOn').checked});toast('Pengumuman disimpan.')}catch(err){toast('Gagal menyimpan.')}});
+}
+function drawBans(list){const el=$('#banList');if(!el)return;el.innerHTML=list&&list.length?list.map(n=>`<span>${esc(n)}<button data-unban="${esc(n)}" aria-label="Buka blokir ${esc(n)}">×</button></span>`).join(''):'<p class="note">Belum ada nama yang diblokir.</p>'}
+document.addEventListener('click',async e=>{const u=e.target.closest('[data-unban]');if(!u)return;try{const r=await api('ban',{name:u.dataset.unban,off:true});drawBans(r.banned)}catch(err){toast('Gagal.')}});
+
+/* ---------- Bantuan ---------- */
+function vHelp(){
+  V(`<div class="card stack"><h2>Cara membaca dasbor</h2>
+  <p class="note"><b>Ringkasan</b>: jumlah pemain, pemain hari ini, tamat Season 1, rating.</p>
+  <p class="note"><b>Cerita</b>: bab mana yang membuat pemain berhenti. Tingkat tamat di bawah 50% ditandai merah; itu tanda bab terlalu sulit atau membingungkan.</p>
+  <p class="note"><b>Ulasan</b>: baca, sorot, atau sembunyikan ulasan. Ulasan baru ditandai merah di menu.</p>
+  <p class="note"><b>Kasus Harian</b>: tingkat kesulitan tiap kasus dari skor pemain.</p>
+  <p class="note"><b>Papan Skor</b>: hapus skor mencurigakan dan blokir nama yang tidak pantas.</p>
+  <p class="note"><b>Pengumuman</b>: kabar singkat yang muncul di beranda game.</p>
+  <p class="note">Data mentah ada di Google Sheet, tab Event, Skor, dan Ulasan. Jangan ubah judul kolom di baris pertama.</p>
+  <p class="note">Untuk mengganti kunci admin: Apps Script, Project Settings, Script Properties, ubah ADMIN_KEY. Semua perangkat yang tersimpan akan otomatis keluar.</p></div>`);
+}
+
+/* ---------- Mulai ---------- */
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)show(b.dataset.tab)});
+$('#loginForm').addEventListener('submit',e=>{e.preventDefault();login($('#key').value.trim(),$('#remember').checked)});
+$('#logout').addEventListener('click',()=>logout(false));
+$('#refresh').addEventListener('click',async()=>{const b=$('#refresh');b.disabled=true;try{STATS=await api('stats');REV=null;show(TAB);toast('Data diperbarui.')}catch(e){toast('Gagal memuat.')}finally{b.disabled=false}});
+if(!SHEET_URL){$('#noUrl').hidden=false;$('#loginBtn').disabled=true}
+else{const k=store();if(k)login(k,!!localStorage.getItem('ls.admin'))}
+</script>
+</body>
+</html>
