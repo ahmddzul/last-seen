@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Last Seen Admin</title>
+<link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap">
 <style>
@@ -128,6 +129,7 @@ textarea{min-height:90px;resize:vertical}
       <button role="tab" data-tab="sum" aria-selected="true">Ringkasan</button>
       <button role="tab" data-tab="story">Cerita</button>
       <button role="tab" data-tab="rev">Ulasan<span class="dot" id="revDot" hidden></span></button>
+      <button role="tab" data-tab="players">Pemain</button>
       <button role="tab" data-tab="daily">Kasus Harian</button>
       <button role="tab" data-tab="board">Papan Skor</button>
       <button role="tab" data-tab="ann">Pengumuman</button>
@@ -171,7 +173,7 @@ function logout(bad){forget();KEY='';$('#app').hidden=true;$('#login').hidden=fa
 
 function show(tab){
   TAB=tab;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
-  const f={sum:vSum,story:vStory,rev:vRev,daily:vDaily,board:vBoard,ann:vAnn,help:vHelp}[tab];
+  const f={sum:vSum,story:vStory,rev:vRev,players:vPlayers,daily:vDaily,board:vBoard,ann:vAnn,help:vHelp}[tab];
   const dot=$('#revDot');if(STATS&&STATS.reviews.fresh){dot.textContent=STATS.reviews.fresh;dot.hidden=false}else dot.hidden=true;
   f();
 }
@@ -185,6 +187,7 @@ function vSum(){
     <div class="kpi"><small>Pemain unik</small><b>${num(S.players)}</b><span>sejak awal</span></div>
     <div class="kpi"><small>Hari ini</small><b>${num(S.todayPlayers)}</b><span>pemain aktif</span></div>
     <div class="kpi"><small>Tamat Season 1</small><b>${num(b5.finish)}</b><span>${pct(b5.finish,pro.start)}% dari yang mulai</span></div>
+    <div class="kpi"><small>Akun pemain</small><b>${num(S.accounts||0)}</b><span>${pct(S.accounts||0,S.players)}% dari pemain</span></div>
     <div class="kpi"><small>Kasus Harian</small><b>${num(S.daily)}</b><span>kali dimainkan</span></div>
     <div class="kpi"><small>Rating</small><b>${S.reviews.n?S.reviews.avg.toFixed(1)+' ★':'-'}</b><span>${num(S.reviews.n)} ulasan${S.reviews.fresh?`, ${S.reviews.fresh} baru`:''}</span></div>
   </div>
@@ -250,6 +253,30 @@ document.addEventListener('click',async e=>{
   catch(err){b.disabled=false;toast('Gagal menyimpan.')}
 });
 
+/* ---------- Pemain ---------- */
+let PL=null;
+async function vPlayers(){
+  V(`<div class="card"><h2>Akun pemain</h2><p class="sub">Pemain yang membuat nama pengguna dan PIN. Kalau ada yang lupa PIN, cari namanya lalu tekan Reset PIN, dan kirim PIN baru lewat DM.</p>
+    <div class="filters"><input type="text" id="pq" placeholder="Cari nama pengguna" aria-label="Cari nama pengguna" autocapitalize="none"></div>
+    <div id="plList"><p class="empty-state">Memuat…</p></div></div>`);
+  $('#pq').addEventListener('input',drawPlayers);
+  try{PL=(await api('players')).list;drawPlayers()}catch(e){if(e.message!=='key')$('#plList').innerHTML='<p class="empty-state">Daftar pemain belum bisa dimuat.</p>'}
+}
+const EN={home:'Pulang',two:'Dua Rumah',late:'Terlambat'};
+function drawPlayers(){if(!PL)return;const q=$('#pq').value.trim().toLowerCase();const L=PL.filter(x=>!q||x.u.includes(q));
+  $('#plList').innerHTML=L.length?`<div class="tbl"><table><thead><tr><th>Nama</th><th class="r">Bab tamat</th><th class="r">Bintang</th><th>Ending</th><th class="r">Streak</th><th>Dibuat</th><th>Terakhir aktif</th><th></th></tr></thead><tbody>
+  ${L.map(x=>`<tr><td>@${esc(x.u)}${x.locked?' <span class="tag hard">terkunci</span>':''}</td><td class="r">${x.done}/6</td><td class="r">${x.stars}</td><td>${x.endings.map(k=>EN[k]||k).join(', ')||'-'}</td><td class="r">${x.streak}</td><td>${fmtD(x.made)}</td><td>${fmtD(x.seen)}</td>
+  <td><button class="btn" style="min-height:36px" data-pin="${x.row}" data-u="${esc(x.u)}">Reset PIN</button> <button class="btn warn" style="min-height:36px" data-pdel="${x.row}" data-u="${esc(x.u)}">Hapus</button></td></tr>`).join('')}
+  </tbody></table></div>`:'<p class="empty-state">Belum ada akun pemain.</p>'}
+document.addEventListener('click',async e=>{
+  const pn=e.target.closest('[data-pin]'),pd=e.target.closest('[data-pdel]');
+  if(pn){if(pn.dataset.confirm!=='1'){pn.dataset.confirm='1';pn.textContent='Yakin reset?';setTimeout(()=>{if(pn.isConnected){pn.dataset.confirm='';pn.textContent='Reset PIN'}},3000);return}
+    pn.disabled=true;try{const r=await api('player_pin',{row:+pn.dataset.pin,u:pn.dataset.u});
+      if(r.ok){pn.closest('td').innerHTML=`<b style="font-family:var(--f-type);font-size:18px;letter-spacing:.15em">${r.pin}</b><br><small style="color:var(--mute)">PIN baru @${esc(pn.dataset.u)}. Kirim ke pemainnya.</small>`}else{toast('Data berubah, muat ulang dulu.')}}catch(err){pn.disabled=false;toast('Gagal mereset.')}}
+  if(pd){if(pd.dataset.confirm!=='1'){pd.dataset.confirm='1';pd.textContent='Yakin hapus akun?';setTimeout(()=>{if(pd.isConnected){pd.dataset.confirm='';pd.textContent='Hapus'}},3000);return}
+    pd.disabled=true;try{const r=await api('player_del',{row:+pd.dataset.pdel,u:pd.dataset.u});toast(r.ok?'Akun dihapus.':'Data berubah, muat ulang dulu.');vPlayers()}catch(err){toast('Gagal menghapus.')}}
+});
+
 /* ---------- Kasus Harian ---------- */
 function vDaily(){
   const C=STATS.cases;
@@ -302,10 +329,12 @@ function vHelp(){
   <p class="note"><b>Ringkasan</b>: jumlah pemain, pemain hari ini, tamat Season 1, rating.</p>
   <p class="note"><b>Cerita</b>: bab mana yang membuat pemain berhenti. Tingkat tamat di bawah 50% ditandai merah; itu tanda bab terlalu sulit atau membingungkan.</p>
   <p class="note"><b>Ulasan</b>: baca, sorot, atau sembunyikan ulasan. Ulasan baru ditandai merah di menu.</p>
+  <p class="note"><b>Pemain</b>: akun pemain. Reset PIN untuk pemain yang lupa, lalu kirim PIN barunya lewat DM. PIN lama langsung tidak berlaku.</p>
   <p class="note"><b>Kasus Harian</b>: tingkat kesulitan tiap kasus dari skor pemain.</p>
   <p class="note"><b>Papan Skor</b>: hapus skor mencurigakan dan blokir nama yang tidak pantas.</p>
   <p class="note"><b>Pengumuman</b>: kabar singkat yang muncul di beranda game.</p>
-  <p class="note">Data mentah ada di Google Sheet, tab Event, Skor, dan Ulasan. Jangan ubah judul kolom di baris pertama.</p>
+  <p class="note">PIN pemain disimpan teracak (hash), jadi kamu pun tidak bisa melihat PIN lama. Setelah 5 kali salah, akun terkunci 15 menit.</p>
+  <p class="note">Data mentah ada di Google Sheet, tab Event, Skor, Ulasan, dan Pemain. Jangan ubah judul kolom di baris pertama.</p>
   <p class="note">Untuk mengganti kunci admin: Apps Script, Project Settings, Script Properties, ubah ADMIN_KEY. Semua perangkat yang tersimpan akan otomatis keluar.</p></div>`);
 }
 

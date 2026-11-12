@@ -4,6 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#05060a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Last Seen">
+<meta property="og:image" content="https://ahmddzul.github.io/last-seen/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://ahmddzul.github.io/last-seen/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Last Seen: game detektif di HP. HP adikmu ditemukan di peron stasiun. Adikmu tidak.">
 <meta property="og:title" content="Last Seen">
 <meta property="og:description" content="HP adikmu ditemukan di peron stasiun. Adikmu tidak. Game detektif gratis di HP.">
@@ -608,6 +622,20 @@ svg{display:block}
 .ann span{flex:1;padding-top:2px}
 .ann button{width:44px;height:44px;margin:-10px -2px -10px 0;display:grid;place-items:center;color:#f3e2b5;flex:none}
 .ann button svg{width:16px;height:16px}
+.acc-card p{line-height:1.5}
+.acc-btns{display:flex;gap:8px;flex-wrap:wrap}
+.acc-btns .btn{flex:1;min-width:140px}
+.acc-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.acc-row span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.acc-row small{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.acc-row b{font-size:16px}
+.acc-row em{font-style:normal;font-size:13px;color:var(--mute)}
+.acc-row .btn{width:auto;padding:0 16px;flex:none}
+.acc-form{display:flex;flex-direction:column;gap:8px}
+.acc-form label{font-size:14px;font-weight:600}
+.acc-form input{min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:inherit;padding:0 14px;font:inherit;font-size:17px}
+.acc-form input#accP,.acc-form input#accP2{letter-spacing:.4em}
+.acc-err{margin:0;color:#ff9d93;font-size:14px}
 .rate{display:flex;flex-direction:column;gap:6px;align-items:center;padding:12px;border-radius:14px;border:1px solid var(--line)}
 .rate p{margin:0;font-size:14px;font-weight:600}
 .rate-stars{display:flex;gap:2px}
@@ -820,7 +848,7 @@ const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelect
 const app=$('#app');
 let SAVE={best:{},lang:'id',sound:true};
 try{const s=JSON.parse(localStorage.getItem('lastseen.v2')||'null');if(s)SAVE=Object.assign(SAVE,s)}catch(e){}
-const persist=()=>{try{localStorage.setItem('lastseen.v2',JSON.stringify(SAVE))}catch(e){}};
+const persist=()=>{try{localStorage.setItem('lastseen.v2',JSON.stringify(SAVE))}catch(e){}if(SAVE.acc&&typeof queueSync==='function')queueSync()};
 const G={lang:SAVE.lang||'id'};
 const t=x=>Array.isArray(x)?x[G.lang==='id'?0:1]:(x==null?'':String(x));
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -1895,6 +1923,7 @@ function finish(){
     <div class="score" id="sc">0</div>
     <div class="rank">${esc(t(U.ranks[st-1]))}${isBest&&prev?` · ${G.lang==='id'?'Rekor baru':'New best'}`:''}</div>
     <div class="crit">${ok(true,U.c1)}${ok(s2,U.c2)}${L.secrets.length?ok(s3,G.mode==='story'?[U.c3[0]+' (mode Detektif)',U.c3[1]+' (Detective mode)']:U.c3):ok(true,U.c3none)}</div>
+    ${L.id==='prolog'?accCardHtml():''}
     ${L.id!=='prolog'?`<div class="support"><p>${L.id==='bab5'?(G.lang==='id'?'Kamu sudah menjemput Nadia pulang. Season 2 sedang digarap. Kalau mau membantu Nenek Siti ditemukan lebih cepat, kamu bisa dukung pembuatnya.':"You brought Nadia home. Season 2 is in the works. If you'd like to help Grandma Siti get found sooner, you can support its maker."):(G.lang==='id'?'Suka ceritanya? Last Seen gratis dan akan tetap gratis. Kalau berkenan, kamu bisa traktir kopi pembuatnya.':'Enjoyed the story? Last Seen is free and will stay free. If you like, you can buy its maker a coffee.')}</p><a href="${SAW_URL}" target="_blank" rel="noopener">${G.lang==='id'?'Traktir kopi di Saweria':'Buy a coffee on Saweria'}</a></div>`:''}
     ${rateHtml(L.id)}
     ${miss.length?`<p class="miss"><b>${esc(t(U.missed))} (${miss.length}):</b> ${miss.map(s=>esc(t(s.tease))).join(' · ')}</p>`:''}
@@ -2002,6 +2031,9 @@ document.addEventListener('click',e=>{
     case 'rateStar':setRateStar(+v);break;
     case 'rateSend':sendRate();break;
     case 'annX':SAVE.annSeen=G.cfg&&G.cfg.annId;persist();{const a=$('.ann');if(a)a.remove()}break;
+    case 'acc':openAcc(v);break;
+    case 'accGo':accSubmit();break;
+    case 'accOut':accLogout();break;
     case 'wlLang':if(G.lang!==v){G.lang=v;SAVE.lang=v;persist();document.documentElement.lang=v;showWelcome(true)}break;
     case 'settings':openSettings();break;
     case 'langM':G.lang=v;SAVE.lang=v;persist();closeSheet();showMenu();openSettings();break;
@@ -2740,6 +2772,61 @@ const SHEET_URL='';
 function uid(){try{let v=localStorage.getItem('lastseen.id');if(!v){v=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('lastseen.id',v)}return v}catch(e){return 'anon'}}
 function track(e,o){if(!SHEET_URL)return;try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain'},body:JSON.stringify(Object.assign({a:'ev',e,id:uid(),lang:G.lang},o||{}))}).catch(()=>{})}catch(x){}}
 async function sheetCall(body){const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.json()}
+/* ---------- Akun pemain: nama pengguna + PIN ---------- */
+function saveData(){const d=JSON.parse(JSON.stringify(SAVE));delete d.acc;delete d.annSeen;return d}
+function mergeSave(a,b){const o=Object.assign({},a,b);
+  o.best={};new Set([...Object.keys(a.best||{}),...Object.keys(b.best||{})]).forEach(k=>{const x=(a.best||{})[k],y=(b.best||{})[k];o.best[k]=!x?y:!y?x:{stars:Math.max(x.stars,y.stars),score:Math.max(x.score,y.score)}});
+  o.endings=Object.assign({},a.endings,b.endings);o.rated=Object.assign({},a.rated,b.rated);o.sent=Object.assign({},a.sent,b.sent);
+  o.flags=Object.assign({},a.flags,b.flags);o.seenHowto=a.seenHowto||b.seenHowto;
+  const da=a.daily,db=b.daily;if(da||db){const x=da||{},y=db||{};const newer=(x.last||'')>=(y.last||'')?x:y;o.daily=Object.assign({},newer,{best:Math.max(x.best||0,y.best||0),played:Object.assign({},x.played,y.played),saw7:x.saw7||y.saw7})}
+  return o}
+let syncT=null;
+function queueSync(){if(!SHEET_URL||!SAVE.acc)return;clearTimeout(syncT);syncT=setTimeout(pushSave,2500)}
+async function pushSave(){const A=SAVE.acc;if(!A)return;try{const r=await sheetCall({a:'acc_save',u:A.u,tok:A.tok,data:saveData()});if(r&&r.err==='tok')accExpired()}catch(e){}}
+async function accPull(){const A=SAVE.acc;if(!SHEET_URL||!A)return;try{const r=await sheetCall({a:'acc_load',u:A.u,tok:A.tok});
+  if(r.err==='tok'){accExpired();return}if(!r.ok)return;const acc=SAVE.acc;const before=JSON.stringify(saveData());
+  SAVE=Object.assign(mergeSave(r.data||{},saveData()),{acc});G.lang=SAVE.lang||G.lang;persist();if(JSON.stringify(saveData())!==before&&G.scene==='menu')showMenu()}catch(e){}}
+function accExpired(){SAVE.acc=null;persist();toast(G.lang==='id'?'Sesi akunmu berakhir. Masuk lagi dengan PIN.':'Your account session ended. Sign in again with your PIN.')}
+function accCardHtml(){if(!SHEET_URL||SAVE.acc)return '';const id=G.lang==='id';
+  return `<div class="support acc-card"><p><b>${id?'Simpan progresmu':'Save your progress'}</b><br>${id?'Buat nama pengguna dan PIN 6 angka. Kalau ganti HP, cukup masuk lagi. Tanpa email.':'Pick a username and a 6-digit PIN. Switch phones and just sign in again. No email.'}</p>
+  <div class="acc-btns"><button class="btn pri" data-a="acc" data-v="new">${id?'Buat akun':'Create account'}</button><button class="btn" data-a="acc" data-v="login">${id?'Sudah punya akun':'I have an account'}</button></div></div>`}
+function accSettingsHtml(){const id=G.lang==='id';const A=SAVE.acc;
+  if(A)return `<div class="acc-row"><span><small>${id?'Akun':'Account'}</small><b>@${esc(A.u)}</b><em>${id?'Progres tersimpan otomatis':'Progress saves automatically'}</em></span><button class="btn" data-a="accOut">${id?'Keluar':'Sign out'}</button></div>`;
+  return `<div class="acc-row"><span><small>${id?'Akun':'Account'}</small><em>${id?'Simpan progres agar bisa dilanjutkan di HP lain.':'Save progress so you can continue on another phone.'}</em></span></div>
+  <div class="acc-btns"><button class="btn pri" data-a="acc" data-v="new">${id?'Buat akun':'Create account'}</button><button class="btn" data-a="acc" data-v="login">${id?'Masuk':'Sign in'}</button></div>`}
+function openAcc(mode){G.accMode=mode;const id=G.lang==='id';const isNew=mode==='new';
+  sheet(`<header><h3>${isNew?(id?'Buat akun':'Create account'):(id?'Masuk ke akun':'Sign in')}</h3><button class="x" data-a="closeSheet" aria-label="${esc(t(U.close))}">${I.x}</button></header>
+  <form class="acc-form" id="accForm" novalidate>
+    <label for="accU">${id?'Nama pengguna':'Username'}</label>
+    <input id="accU" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="15" placeholder="${id?'3–15 huruf, angka, _ atau .':'3–15 letters, numbers, _ or .'}">
+    <label for="accP">PIN</label>
+    <input id="accP" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="${isNew?'new-password':'current-password'}" placeholder="${id?'6 angka':'6 digits'}">
+    ${isNew?`<label for="accP2">${id?'Ulangi PIN':'Repeat PIN'}</label><input id="accP2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password">`:''}
+    <p class="acc-err" id="accErr" role="alert" hidden></p>
+    <button class="btn pri" data-a="accGo" id="accGo" type="button">${isNew?(id?'Buat akun':'Create account'):(id?'Masuk':'Sign in')}</button>
+  </form>
+  <p class="fine" style="margin:0">${isNew?(id?'Ingat PIN-mu. Nama pengguna ini juga dipakai di papan skor Kasus Harian.':'Remember your PIN. This username also appears on the Daily Case leaderboard.'):(id?'Lupa PIN? Kirim pesan ke @ahmddzul di Instagram untuk direset.':'Forgot your PIN? Message @ahmddzul on Instagram to reset it.')}</p>`);
+  const f=$('#accForm');f.addEventListener('submit',e=>{e.preventDefault();accSubmit()});setTimeout(()=>{const u=$('#accU');if(u)u.focus()},300)}
+async function accSubmit(){const id=G.lang==='id';const isNew=G.accMode==='new';
+  const u=($('#accU').value||'').trim().toLowerCase(),p=$('#accP').value||'',p2=isNew?$('#accP2').value:p;
+  const err=m=>{const e=$('#accErr');e.textContent=m;e.hidden=false};
+  if(!/^[a-z0-9_.]{3,15}$/.test(u))return err(id?'Nama pengguna 3–15 karakter: huruf, angka, _ atau titik.':'Username: 3–15 characters, letters, numbers, _ or dot.');
+  if(!/^\d{6}$/.test(p))return err(id?'PIN harus 6 angka.':'PIN must be 6 digits.');
+  if(isNew&&p!==p2)return err(id?'PIN tidak sama. Ketik ulang.':"PINs don't match. Try again.");
+  const b=$('#accGo');b.disabled=true;b.textContent=id?'Sebentar…':'One moment…';
+  try{const r=await sheetCall(isNew?{a:'acc_new',u,pin:p,data:saveData()}:{a:'acc_login',u,pin:p});
+    if(!r.ok){b.disabled=false;b.textContent=isNew?(id?'Buat akun':'Create account'):(id?'Masuk':'Sign in');
+      const M={uname:id?'Nama pengguna tidak valid.':'Invalid username.',weak:id?'PIN terlalu mudah ditebak. Hindari 123456 atau angka kembar.':'PIN is too easy to guess. Avoid 123456 or repeated digits.',taken:id?'Nama pengguna sudah dipakai. Coba yang lain.':'That username is taken. Try another.',name:id?'Nama ini tidak bisa dipakai.':"This name can't be used.",
+        cred:id?`Nama pengguna atau PIN salah.${r.left?` Sisa ${r.left} percobaan.`:''}`:`Wrong username or PIN.${r.left?` ${r.left} tries left.`:''}`,locked:id?`Terlalu banyak percobaan. Coba lagi dalam ${r.wait} menit.`:`Too many tries. Try again in ${r.wait} minutes.`};
+      return err(M[r.err]||(id?'Gagal. Coba lagi.':'Failed. Try again.'))}
+    SAVE.acc={u:r.u,tok:r.tok};
+    if(!isNew)SAVE=Object.assign(mergeSave(r.data||{},saveData()),{acc:SAVE.acc});
+    SAVE.nick=r.u;persist();pushSave();closeSheet();
+    toast(isNew?(id?`Akun @${r.u} dibuat. Progres tersimpan.`:`Account @${r.u} created. Progress saved.`):(id?`Selamat datang lagi, @${r.u}.`:`Welcome back, @${r.u}.`));
+    const c=$('.acc-card');if(c)c.outerHTML=`<p class="fine rate-done">${id?'Progres tersimpan di akun':'Progress saved to'} @${esc(r.u)}</p>`;
+    if(G.scene==='menu'){showMenu();openSettings()}
+  }catch(e){b.disabled=false;b.textContent=isNew?(id?'Buat akun':'Create account'):(id?'Masuk':'Sign in');err(id?'Tidak bisa terhubung. Periksa koneksi.':"Couldn't connect. Check your connection.")}}
+function accLogout(){const id=G.lang==='id';SAVE.acc=null;persist();closeSheet();toast(id?'Kamu keluar dari akun di HP ini. Progres di HP ini tetap ada.':'Signed out on this phone. Progress here stays.');if(G.scene==='menu'){showMenu();openSettings()}}
 function annHtml(){const c=G.cfg;if(!c||!c.ann||SAVE.annSeen===c.annId)return '';
   return `<div class="ann" role="status"><span>${esc(c.ann)}</span><button data-a="annX" aria-label="${G.lang==='id'?'Tutup pengumuman':'Dismiss announcement'}">${I.x}</button></div>`}
 async function loadCfg(){if(!SHEET_URL||G.cfgTried)return;G.cfgTried=1;
@@ -2766,7 +2853,7 @@ async function liveBoard(no,stars,time,wrong){
   const head=(extra)=>`<h4>${id?'Papan skor hari ini':"Today's leaderboard"}<span>${extra||''}</span></h4>`;
   box.innerHTML=head(id?'memuat…':'loading…');
   try{
-    if(SAVE.nick&&!(SAVE.sent||{})[no]){await sheetCall({a:'score',no,n:SAVE.nick,s:stars,t:time,w:wrong,id:uid()});SAVE.sent=SAVE.sent||{};SAVE.sent[no]=1;persist()}
+    if(SAVE.nick&&!(SAVE.sent||{})[no]){const sr=await sheetCall({a:'score',no,n:SAVE.nick,s:stars,t:time,w:wrong,id:uid(),u:SAVE.acc&&SAVE.acc.u,tok:SAVE.acc&&SAVE.acc.tok});if(sr&&sr.err==='name'&&!SAVE.acc){SAVE.nick='';persist();toast(G.lang==='id'?'Nama itu milik akun lain. Pilih nama lain.':'That name belongs to an account. Pick another.');return liveBoard(no,stars,time,wrong)}SAVE.sent=SAVE.sent||{};SAVE.sent[no]=1;persist()}
     const res=await sheetCall({a:'top',no,id:uid()});if(!$('#lb'))return;
     const list=(res.top||[]).map(f=>Object.assign({},f,{me:SAVE.nick&&f.n===SAVE.nick&&f.mine}));
     let h=head(id?`${res.total||0} pemain`:`${res.total||0} players`)+(list.length?lbRows(list):`<p class="lb-empty">${id?'Belum ada yang masuk papan. Jadilah yang pertama.':'Nobody on the board yet. Be the first.'}</p>`);
@@ -2826,7 +2913,7 @@ function showWelcome(quick){
     <p class="fine" style="color:#a7afc0">${esc(t(U.phones))}</p></div>`,'welcome');
   d.dataset.a='enter';if(quick)d.classList.add('quick');fxMount(d);
 }
-function enterHome(){ctx();G.audioOn=true;if(SAVE.sound)rainSound(true);showMenu()}
+function enterHome(){ctx();G.audioOn=true;if(SAVE.sound)rainSound(true);showMenu();accPull()}
 function nextStory(){
   if(!SAVE.best.prolog)return {id:'prolog',ey:["Mulai di sini","Start here"],cta:["Mulai Prolog","Start the Prologue"]};
   const nx=ORDER.find(id=>!SAVE.best[id]);
@@ -2871,6 +2958,7 @@ function openSettings(){
   <div class="setrow"><span>${esc(t(U.lang))}</span><div class="seg"><button data-a="langM" data-v="id" aria-pressed="${G.lang==='id'}">Indonesia</button><button data-a="langM" data-v="en" aria-pressed="${G.lang==='en'}">English</button></div></div>
   <div class="setrow"><span>${esc(t(U.sound))}</span><div class="seg"><button data-a="sndM" data-v="1" aria-pressed="${!!SAVE.sound}">${esc(t(U.on))}</button><button data-a="sndM" data-v="0" aria-pressed="${!SAVE.sound}">${esc(t(U.off))}</button></div></div>
   <div class="setrow"><span>${G.lang==='id'?'Efek hujan dan kilat':'Rain and lightning'}</span><div class="seg"><button data-a="fxSet" data-v="1" aria-pressed="${!!SAVE.fx}">${esc(t(U.on))}</button><button data-a="fxSet" data-v="0" aria-pressed="${!SAVE.fx}">${esc(t(U.off))}</button></div></div>
+  ${SHEET_URL?accSettingsHtml():''}
   ${SHEET_URL?`<button class="btn" data-a="rateOpen" data-v="umum">${G.lang==='id'?'Kirim ulasan untuk Last Seen':'Review Last Seen'}</button>`:''}
   <div class="about"><p>${G.lang==='id'?'Last Seen dikerjakan oleh satu orang dan gratis dimainkan.':'Last Seen is made by one person and free to play.'}</p>${creditHtml()}${sawHtml()}</div>`);
 }

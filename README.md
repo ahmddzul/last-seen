@@ -13,6 +13,7 @@ Dibuat oleh [@ahmddzul](https://instagram.com/ahmddzul). Dukung lewat [Saweria](
 ## Data dan dasbor admin
 
 - `apps-script/Code.gs`: kode Google Apps Script untuk papan skor, statistik, ulasan, dan pengumuman.
+- Akun pemain: nama pengguna + PIN 6 angka, progres tersinkron lewat Apps Script (tab Pemain).
 - `admin.html`: dasbor admin, dibuka di `/admin.html`, dilindungi kunci admin (Script Property `ADMIN_KEY`).
 - Alamat Web app Apps Script dipasang di konstanta `SHEET_URL` pada `index.html` dan `admin.html`.
 
