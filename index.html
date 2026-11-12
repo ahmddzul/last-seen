@@ -420,7 +420,13 @@ svg{display:block}
 .nc .d{text-align:center;font-size:15px;opacity:.8;margin-bottom:10px}
 .nc h4{margin:6px 6px 2px;font-size:20px;font-weight:700}
 .nc .lnote{position:relative}
-.nc .close{margin:10px auto 0;padding:8px 18px;border-radius:999px;background:rgba(255,255,255,.14);font-size:14px}
+.nc .close{margin:10px auto 0;padding:8px 18px;border-radius:999px;background:rgba(255,255,255,.14);font-size:14px;min-height:44px}
+.nc .nc-grab{display:block;width:40%;height:5px;border-radius:5px;background:rgba(255,255,255,.5);margin:18px auto 0;flex:none}
+.sb{cursor:pointer}
+.hi{height:34px;cursor:pointer}
+.pulltab{position:absolute;top:44px;left:50%;transform:translateX(-50%);z-index:49;width:88px;height:30px;display:grid;place-items:center;border-radius:0 0 14px 14px;background:rgba(10,10,14,.55);backdrop-filter:blur(10px);animation:pulltab 1.8s ease-in-out infinite}
+.pulltab span{width:12px;height:12px;border-right:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(45deg) translate(-2px,-2px)}
+@keyframes pulltab{50%{transform:translateX(-50%) translateY(5px)}}
 .bnr{position:absolute;top:10px;left:3%;right:3%;z-index:60;display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:22px;background:rgba(44,44,48,.9);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);color:#fff;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.45);animation:bnrin .5s cubic-bezier(.2,1.2,.35,1)}
 .bnr.out{animation:bnrout .35s ease-in forwards}
 .bnr .ai{width:38px;height:38px;border-radius:9px;flex:none;display:grid;place-items:center;background:var(--bg)}
@@ -881,8 +887,45 @@ const SFX={
   glitch:()=>{for(let i=0;i<7;i++)tone(150+Math.random()*1900,.05,'square',.035,i*.05)},
   star:i=>tone(659+i*220,.35,'triangle',.1),
   swoosh:()=>tone(420,.12,'sine',.025),
-  string:()=>{tone(220,.25,'triangle',.06);tone(330,.2,'triangle',.04,.05)}
+  string:()=>{tone(220,.25,'triangle',.06);tone(330,.2,'triangle',.04,.05)},
+  evOpen:()=>{nz(.14,'bandpass',3200,.05);tone(880,.09,'triangle',.05,.03);tone(1320,.12,'triangle',.035,.08)},
+  pinThunk:()=>{tone(120,.18,'sine',.22,.04);nz(.06,'lowpass',900,.08,.04)},
+  board:()=>{nz(.35,'lowpass',500,.09);tone(98,.4,'sine',.12,.05)},
+  pick:()=>{nz(.03,'highpass',2500,.06);tone(1700,.03,'square',.02)},
+  stamp:()=>{nz(.12,'lowpass',260,.35,.25);tone(82,.25,'sine',.3,.25)},
+  type:n=>{for(let i=0;i<(n||12);i++){const d=.32+i*.07+Math.random()*.03;nz(.025,'highpass',1800+Math.random()*1500,.07,d)}nz(.05,'bandpass',900,.06,.32+(n||12)*.07+.05)},
+  snap:()=>{nz(.05,'highpass',3000,.18);tone(900,.18,'sawtooth',.03);tone(300,.25,'sawtooth',.025,.06)}
 };
+/* Tension score: low drone, heartbeat pulse that quickens as the meter runs down, sparse minor-key notes, a clock tick near the end. */
+let MUS=null;
+const musicOn=()=>SAVE.sound&&SAVE.music!==false;
+function tension(){const L=G.level&&LV[G.level];if(!L||L.battery==null)return .25;const r=Math.max(0,G.battery)/Math.max(1,G.mStart||G.battery||1);return Math.min(1,.15+(1-r)*.95)}
+function musicStart(){if(MUS||!musicOn())return;const c=ctx();if(!c)return;
+  try{const out=c.createGain();out.gain.value=0;out.connect(c.destination);
+    const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=300;lp.Q.value=3;lp.connect(out);
+    const mk=(f,type,v)=>{const o=c.createOscillator();o.type=type;o.frequency.value=f;const g=c.createGain();g.gain.value=v;o.connect(g).connect(lp);o.start();return o};
+    const srcs=[mk(55,'sawtooth',.35),mk(55.4,'sawtooth',.3),mk(82.41,'triangle',.25),mk(110.2,'sine',.12)];
+    const lfo=c.createOscillator();lfo.frequency.value=.06;const lg=c.createGain();lg.gain.value=120;lfo.connect(lg).connect(lp.frequency);lfo.start();srcs.push(lfo);
+    const pad=c.createGain();pad.gain.value=1;const dl=c.createDelay(1.5);dl.delayTime.value=.55;const fb=c.createGain();fb.gain.value=.42;const wet=c.createGain();wet.gain.value=.55;
+    pad.connect(out);pad.connect(dl);dl.connect(fb).connect(dl);dl.connect(wet).connect(out);
+    out.gain.linearRampToValueAtTime(MUSV,c.currentTime+4);
+    MUS={c,out,lp,pad,srcs,t:[]};musicBeat();setTimeout(musicNote,3500)}catch(e){}}
+const MUSV=.055;
+function musicBeat(){if(!MUS)return;const c=MUS.c,x=tension();
+  if(!G.paused&&!G.over){const t0=c.currentTime;
+    const thump=(d,v)=>{const o=c.createOscillator(),g=c.createGain();o.frequency.setValueAtTime(70,t0+d);o.frequency.exponentialRampToValueAtTime(38,t0+d+.18);g.gain.setValueAtTime(.0001,t0+d);g.gain.exponentialRampToValueAtTime(v,t0+d+.015);g.gain.exponentialRampToValueAtTime(.0001,t0+d+.25);o.connect(g).connect(MUS.out);o.start(t0+d);o.stop(t0+d+.3)};
+    thump(0,.9);thump(.24,.6);
+    if(x>.62){for(let i=1;i<4;i++){const d=i*.36;const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.value=i%2?2400:1900;g.gain.setValueAtTime(.0001,t0+d);g.gain.exponentialRampToValueAtTime(.05,t0+d+.003);g.gain.exponentialRampToValueAtTime(.0001,t0+d+.03);o.connect(g).connect(MUS.out);o.start(t0+d);o.stop(t0+d+.04)}}
+    MUS.lp.frequency.setTargetAtTime(240+x*620,t0,1.5)}
+  MUS.t.push(setTimeout(musicBeat,Math.round(1500-x*820)))}
+function musicNote(){if(!MUS)return;const c=MUS.c,x=tension();
+  if(!G.paused&&!G.over){const N=[220,261.63,329.63,349.23,392,415.3,440,523.25];const f=N[Math.floor(Math.random()*N.length)]*(Math.random()<.3?.5:1);const t0=c.currentTime;
+    const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;const o2=c.createOscillator();o2.type='triangle';o2.frequency.value=f*2.003;const g2=c.createGain();g2.gain.value=.25;o2.connect(g2).connect(g);
+    g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.18+x*.1,t0+.9);g.gain.exponentialRampToValueAtTime(.0001,t0+4.2);o.connect(g).connect(MUS.pad);o.start(t0);o2.start(t0);o.stop(t0+4.4);o2.stop(t0+4.4)}
+  MUS.t.push(setTimeout(musicNote,4500+Math.random()*(7000-x*4000)))}
+function musicDuck(v){if(!MUS)return;try{MUS.out.gain.setTargetAtTime(v==null?MUSV:v,MUS.c.currentTime,.4)}catch(e){}}
+function musicStop(){if(!MUS)return;const m=MUS;MUS=null;m.t.forEach(clearTimeout);try{const n=m.c.currentTime;m.out.gain.cancelScheduledValues(n);m.out.gain.setValueAtTime(m.out.gain.value,n);m.out.gain.linearRampToValueAtTime(0,n+1.6);setTimeout(()=>m.srcs.forEach(o=>{try{o.stop()}catch(e){}}),1800)}catch(e){}}
+function nz(dur,type,freq,vol,delay){const c=ctx();if(!c)return;try{const t0=c.currentTime+(delay||0);const s=c.createBufferSource();s.buffer=noiseBuf(c,Math.max(.05,dur));const f=c.createBiquadFilter();f.type=type;f.frequency.value=freq;const g=c.createGain();g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(vol,t0+.006);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);s.connect(f).connect(g).connect(c.destination);s.start(t0);s.stop(t0+dur+.05)}catch(e){}}
 const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
 /* ===== Icons ===== */
@@ -1296,7 +1339,7 @@ const HT=[
   {h:["Tarik benang merah","Pull the red string"],p:["Di Papan Bukti, ketuk dua kartu yang saling berkaitan. Kalau benar, benang merah terpasang dan kamu dapat temuan baru.","On the board, tap two cards that belong together. If you're right, the red string holds and you get a new finding."],il:'string'},
   {h:["Baterai adalah waktumu","Battery is your time"],p:["HP Nadia tinggal 34% dan tidak ada pengisi daya. Baterai hanya turun saat layar HP Nadia menyala. Salah hubung memakan 2%, petunjuk 3%. Di mode Detektif, kalau habis kamu gagal.","Nadia's phone is at 34% with no charger. It only drains while her screen is on. A wrong link costs 2%, a hint 3%. In Detective mode, if it hits zero you fail."],il:'battery'},
   {h:["Kejar tiga bintang","Chase three stars"],p:["Bintang 1: selesaikan bab. Bintang 2: tanpa salah dan tanpa petunjuk. Bintang 3: temukan semua rahasia tersembunyi. Ulangi bab untuk skor sempurna.","Star 1: finish the chapter. Star 2: no wrong links and no hints. Star 3: find every hidden secret. Replay for a perfect score."],il:'stars'},
-  {h:["Satu trik lagi","One more trick"],p:["Seperti iPhone sungguhan: usap ke bawah dari atas layar untuk membuka notifikasi lama, dan usap ke atas dari bawah untuk kembali ke layar utama.","Just like a real iPhone: swipe down from the top to see old notifications, and swipe up from the bottom to go home."],il:'swipe'}
+  {h:["Satu trik lagi","One more trick"],p:["Seperti iPhone sungguhan: usap ke bawah dari atas layar untuk membuka notifikasi lama, dan usap ke atas dari bawah untuk kembali ke layar utama. Bisa juga ketuk jam di pojok atas dan garis di bawah layar.","Just like a real iPhone: swipe down from the top to see old notifications, and swipe up from the bottom to go home. You can also tap the clock at the top and the bar at the bottom."],il:'swipe'}
 ];
 function htIll(k){
   switch(k){
@@ -1343,7 +1386,7 @@ function startLevel(id,mode){
   if(id==='bab1'&&!SAVE.seenHowto){SAVE.seenHowto=1;persist();runCine(LV[id].cine,()=>showHowto(3,go));}
   else runCine(LV[id].cine,go);
 }
-function stopPlay(){const p=$('#play');if(p)p.remove();(G.timers||[]).forEach(clearTimeout);G.timers=[];const o=$('.ov');if(o)o.remove()}
+function stopPlay(){musicStop();const p=$('#play');if(p)p.remove();(G.timers||[]).forEach(clearTimeout);G.timers=[];const o=$('.ov');if(o)o.remove()}
 function buildPlay(){
   stopPlay();
   const w=document.createElement('section');w.id='play';
@@ -1352,7 +1395,7 @@ function buildPlay(){
   lv().phones.forEach(o=>$('#stage').appendChild(buildDevice(o)));
   renderHud();renderDock();showPhone(G.phone,true);
 }
-function afterStart(){const L=lv();if(L.onStart)L.onStart()}
+function afterStart(){const L=lv();musicStart();if(L.onStart)L.onStart()}
 
 function renderHud(){
   const h=$('#hud');if(!h)return;const L=lv();
@@ -1416,10 +1459,10 @@ function renderLock(d){
   <span class="hand"></span><button class="swipe" data-a="toPass">${esc(t(U.swipe))}</button>`;
   L.dataset.a='toPass';$('.home',d).style.visibility='hidden';
   scr.insertBefore(L,$('.apps',d));
-  let sy=null,dy=0;
-  L.addEventListener('pointerdown',e=>{sy=e.clientY;dy=0;L.classList.add('drag');try{L.setPointerCapture(e.pointerId)}catch(_){}});
+  let sy=null,dy=0,t0=0;
+  L.addEventListener('pointerdown',e=>{sy=e.clientY;dy=0;t0=Date.now();L.classList.add('drag');try{L.setPointerCapture(e.pointerId)}catch(_){}});
   L.addEventListener('pointermove',e=>{if(sy==null)return;dy=Math.min(0,e.clientY-sy);L.style.transform=`translateY(${dy}px)`;L.style.opacity=String(1+dy/500)});
-  const up=()=>{if(sy==null)return;sy=null;L.classList.remove('drag');L.style.transform='';L.style.opacity='';if(dy<-50){G.swallow=true;setTimeout(()=>{G.swallow=false},400);showPass()}};
+  const up=()=>{if(sy==null)return;sy=null;L.classList.remove('drag');L.style.transform='';L.style.opacity='';if(dy<-28||(dy<-12&&-dy/Math.max(1,Date.now()-t0)>.4)){G.swallow=true;setTimeout(()=>{G.swallow=false},400);showPass()}};
   L.addEventListener('pointerup',up);L.addEventListener('pointercancel',up);
 }
 function showPass(){
@@ -1452,21 +1495,38 @@ function unlock(){
   later(()=>{P&&P.remove();L&&L.remove()},550);
   renderHud();
   later(()=>thought(["Maaf, Nad. Kakak buka ya.","Sorry, Nad. I'm going in."]),600);
-  later(()=>thought(["Nadia jarang menghapus notifikasi. Mungkin masih ada yang lama di atas sana.","Nadia never cleared her notifications. There might be old ones up top."]),5200);
+  later(()=>{thought(["Nadia jarang menghapus notifikasi. Mungkin masih ada yang lama di atas sana.","Nadia never cleared her notifications. There might be old ones up top."]);addPullTab()},5200);
 }
 
 /* Gestures: swipe down from top = notification centre, swipe up from bottom = home / unlock */
+/* Touch events still arrive while the browser scrolls, so a swipe that starts on a scrolling list is not lost.
+   Top zone covers the status bar and the top of the app; the NC follows the finger while pulling. */
 function attachGestures(d,o){
-  const scr=$('.scr',d);let sy=null,sx=0,rect=null;
-  scr.addEventListener('pointerdown',e=>{rect=scr.getBoundingClientRect();sy=e.clientY;sx=e.clientX},{passive:true});
-  scr.addEventListener('pointerup',e=>{if(sy==null)return;const dy=e.clientY-sy,top=sy-rect.top,bottom=rect.bottom-sy;sy=null;
-    if(Math.abs(dy)<45)return;
-    setTimeout(()=>{G.swallow=false},400);
-    if(dy>45&&top<70){G.swallow=true;openNC(o);return}
-    if(dy<-45&&bottom<70){G.swallow=true;if(G.nc)closeNC(o);else goHome(o);return}
-    if(dy<-45&&G.nc){G.swallow=true;closeNC(o)}
-  });
+  const scr=$('.scr',d);let st=null;
+  const sb=$('.sb',d);if(sb)sb.dataset.a='sbTap';const hi=$('.hi',d);if(hi)hi.dataset.a='hiTap';
+  const canNC=()=>o==='nadia'&&G.unlocked&&!G.cut;
+  const begin=(x,y)=>{const r=scr.getBoundingClientRect();st={x,y,top:y-r.top,bot:r.bottom-y,h:r.height,t:Date.now(),peek:null}};
+  const move=(x,y)=>{if(!st)return;const dy=y-st.y,dx=x-st.x;
+    if(canNC()&&!G.nc&&st.top<TOPZ&&dy>6&&Math.abs(dy)>Math.abs(dx)){const nc=$('.nc',d);if(!st.peek){fillNC(o);nc.style.transition='none'}st.peek=nc;nc.style.transform=`translateY(calc(-102% + ${Math.min(dy*1.5,st.h)}px))`}};
+  const reset=()=>{if(st&&st.peek){st.peek.style.transition='';st.peek.style.transform=''}};
+  const end=(x,y)=>{if(!st)return;const s=st;reset();st=null;const dx=x-s.x,dy=y-s.y,dt=Math.max(1,Date.now()-s.t);
+    const far=Math.abs(dy)>24||(Math.abs(dy)>12&&Math.abs(dy)/dt>.45);
+    if(!far||Math.abs(dx)>Math.abs(dy)*1.2)return;
+    const sw=()=>{G.swallow=true;setTimeout(()=>{G.swallow=false},400)};
+    if(dy>0&&s.top<TOPZ&&!G.nc){if(canNC()){sw();openNC(o)}return}
+    if(o==='nadia'&&!G.unlocked)return;
+    if(dy<0&&s.bot<BOTZ){sw();if(G.nc)closeNC(o);else goHome(o);return}
+    if(dy<0&&G.nc){const nc=$('.nc',d);if(!nc||nc.scrollTop+nc.clientHeight>=nc.scrollHeight-6||s.top>s.h*.55){sw();closeNC(o)}}
+  };
+  scr.addEventListener('touchstart',e=>{if(e.touches.length!==1){reset();st=null;return}const p=e.touches[0];begin(p.clientX,p.clientY)},{passive:true});
+  scr.addEventListener('touchmove',e=>{const p=e.touches[0];if(p)move(p.clientX,p.clientY)},{passive:true});
+  scr.addEventListener('touchend',e=>{const p=e.changedTouches[0];if(p)end(p.clientX,p.clientY)},{passive:true});
+  scr.addEventListener('touchcancel',()=>{reset();st=null},{passive:true});
+  scr.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')begin(e.clientX,e.clientY)});
+  scr.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&e.buttons)move(e.clientX,e.clientY)});
+  scr.addEventListener('pointerup',e=>{if(e.pointerType==='mouse')end(e.clientX,e.clientY)});
 }
+const TOPZ=96,BOTZ=90;
 
 /* ===== Apps & navigation ===== */
 function openApp(o,a,iconEl,instant){
@@ -1675,7 +1735,12 @@ function pgPhone(){
 
 /* ===== Notification centre (Nadia) ===== */
 function openNC(o){
-  if(o!=='nadia'||!G.unlocked)return;const nc=$('#dev-nadia .nc');
+  if(o!=='nadia'||!G.unlocked)return;const nc=$('#dev-nadia .nc');fillNC(o);
+  nc.classList.add('open');G.nc=true;G.fired.ncOpened=1;const pt=$('#dev-nadia .pulltab');if(pt)pt.remove();SFX.swoosh();coachApply();
+  if(!G.fired.th_nc&&lv().id==='bab1'){G.fired.th_nc=1;later(()=>thought(["Notifikasi dari Dimas masih ada. Padahal pesannya sudah dihapus.","Dimas's notifications are still here. Even though he deleted the messages."]),1400)}
+}
+function fillNC(o){
+  const nc=$('#dev-nadia .nc');if(!nc)return;
   const n=(app,ti,tx,tm,ev)=>`<div class="lnote${evCls(ev)}"${evAttr(ev)}><span class="ai" style="--bg:${APPI[app].bg}">${APPI[app].g}</span><span class="m"><b>${esc(ti)}<span>${esc(tm)}</span></b><p>${esc(tx)}</p></span>${pinMark(ev)}</div>`;
   const id=G.lang==='id';
   nc.innerHTML=`<div class="t">${ft(clockStr())}</div><div class="d">${esc(t(lv().date||U.date))}</div><h4>${esc(t(U.nc))}</h4>
@@ -1685,10 +1750,9 @@ function openNC(o){
   ${n('peta',id?'Peta':'Maps',id?'Kamu masih berbagi lokasi dengan Dimas Studio.':'You are still sharing your location with Dimas Studio.',id?'Jum 08.00':'Fri 08:00')}
   ${n('dompet','DompetKita',id?'Tarik tunai Rp1.500.000 berhasil.':'Cash withdrawal of Rp1,500,000 successful.',id?'Jum 17.55':'Fri 17:55')}
   ${n('obrol',id?'Ibu':'Mum',id?'Ke sini aja, Nak.':'Just come here, love.',id?'Kam 23.41':'Thu 23:41')}
-  <button class="close" data-a="ncClose">${esc(t(U.ncClose))}</button>`;
-  nc.classList.add('open');G.nc=true;SFX.swoosh();coachApply();
-  if(!G.fired.th_nc&&lv().id==='bab1'){G.fired.th_nc=1;later(()=>thought(["Notifikasi dari Dimas masih ada. Padahal pesannya sudah dihapus.","Dimas's notifications are still here. Even though he deleted the messages."]),1400)}
+  <button class="close" data-a="ncClose">${esc(t(U.ncClose))}</button><span class="nc-grab" aria-hidden="true"></span>`;
 }
+function addPullTab(){const d=devEl('nadia');if(!d||G.fired.ncOpened||$('.pulltab',d))return;const p=document.createElement('button');p.className='pulltab';p.dataset.a='sbTap';p.setAttribute('aria-label',G.lang==='id'?'Buka notifikasi':'Open notifications');p.innerHTML='<span></span>';$('.scr',d).appendChild(p)}
 function closeNC(o){const nc=$('#dev-nadia .nc');if(nc)nc.classList.remove('open');G.nc=false}
 
 /* ===== In-phone overlays ===== */
@@ -1721,11 +1785,11 @@ function openSheet(o,id,src){
   const s=document.createElement('div');s.className='as';
   s.innerHTML=`<div class="as-card"><div class="as-hd"><small>${esc(t(U.evFrom))} ${esc(e.s.toUpperCase())}</small><p>${esc(ft(t(e.l)))}</p></div><button class="as-btn" data-a="dopin" data-v="${id}">${I.pin}${esc(t(U.pinTo))}</button></div><button class="as-cancel" data-a="asClose">${esc(t(U.cancel))}</button>`;
   s.addEventListener('click',ev=>{if(ev.target===s)s.remove()});
-  scr.appendChild(s);G.asSrc=src;SFX.tap();coachApply();
+  scr.appendChild(s);G.asSrc=src;SFX.evOpen();buzz(10);coachApply();
 }
 function doPin(id){
   const s=$('.as',app);if(s)s.remove();if(G.pins.includes(id))return;
-  G.pins.push(id);SFX.pin();buzz(15);
+  G.pins.push(id);SFX.pin();SFX.pinThunk();buzz(15);
   $$(`[data-ev="${id}"]`).forEach(el=>{el.classList.add('pinned');if(!el.querySelector('.pinmark'))el.insertAdjacentHTML('beforeend',`<span class="pinmark">${I.pin}</span>`)});
   fly(G.asSrc,id);
   later(()=>{renderDock();const b=$('#dock-board');if(b){b.classList.add('bump');setTimeout(()=>b.classList.remove('bump'),500)}},560);
@@ -1781,7 +1845,7 @@ function openBoard(){
   if(G.board){closeBoard();return}
   G.board=true;G.sel=[];
   const b=document.createElement('div');b.className='board';b.id='board';$('#stage').appendChild(b);
-  renderBoard();renderDock();renderHud();SFX.swoosh();emit('board');
+  renderBoard();renderDock();renderHud();SFX.board();emit('board');
 }
 function closeBoard(){const b=$('#board');if(!b)return;G.board=false;b.classList.add('out');setTimeout(()=>b.remove(),280);renderDock();renderHud()}
 function rot(i){return ((i*37)%7-3)*0.9}
@@ -1825,7 +1889,7 @@ function tapCard(id){
   if(G.connecting)return;
   const i=G.sel.indexOf(id);
   if(i>=0){G.sel.splice(i,1);updateSel();SFX.tap();return}
-  G.sel.push(id);SFX.tap();buzz(8);updateSel();
+  G.sel.push(id);SFX.pick();buzz(8);updateSel();
   if(G.sel.length===2)connect(G.sel[0],G.sel[1]);
 }
 function updateSel(){$$('.bc').forEach(c=>c.classList.toggle('sel',G.sel.includes(c.dataset.v)));const f=$('.bd-ft b');if(f)f.textContent=t(G.sel.length?U.bdPick2:U.bdPick)}
@@ -1839,10 +1903,10 @@ function connect(a,b){
     if(d){
       d.hit=[a,b];const sec=lv().secrets.includes(d);
       if(sec)G.secrets.push(d.id);else G.found.push(d.id);
-      G.sel=[];(sec?SFX.secret:SFX.ok)();buzz(sec?[30,40,30,40,60]:[40,30,60]);
+      G.sel=[];(sec?SFX.secret:SFX.ok)();SFX.stamp();SFX.type(14);buzz(sec?[30,40,30,40,60]:[40,30,60]);
       renderBoard(d.id);renderHud();emit('found:'+d.id);afterFound(d,sec);
     }else{
-      G.wrong++;SFX.bad();buzz([60,40,60]);
+      G.wrong++;SFX.snap();SFX.bad();buzz([60,40,60]);
       if(p){p.classList.remove('draw');p.style.strokeDashoffset=0;void p.getBBox();p.classList.add('snap');setTimeout(()=>p.remove(),620)}
       [a,b].forEach(id=>{const c=$(`.bc[data-v="${id}"]`);if(c){c.classList.add('shake');setTimeout(()=>c.classList.remove('shake'),460)}});
       const n=U.nope[Math.floor(Math.random()*U.nope.length)];toast(t(n));
@@ -1914,7 +1978,7 @@ setInterval(tick,250);
 
 /* ===== Finish / fail ===== */
 function finish(){
-  G.over=true;const L=lv();
+  G.over=true;musicStop();const L=lv();
   const s2=G.wrong===0&&G.hints===0;const s3=G.secrets.length===L.secrets.length&&!(L.battery!=null&&G.mode==='story');
   const st=1+(s2?1:0)+(s3?1:0);
   const score=Math.max(0,(L.battery!=null?Math.round(G.battery/Math.max(1,G.mStart||G.battery)*850):600)+(s2?500:0)+G.secrets.length*400-G.wrong*150-G.hints*200+(L.battery!=null?300:0));
@@ -1942,7 +2006,7 @@ function finish(){
   },300);
 }
 function fail(force){
-  if(G.over&&!force)return;G.over=true;track('fail',{lv:G.level,mode:G.mode,x:G.endKey||''});G.cut=true;SFX.bad();buzz([300,100,300]);
+  if(G.over&&!force)return;G.over=true;musicStop();track('fail',{lv:G.level,mode:G.mode,x:G.endKey||''});G.cut=true;SFX.bad();buzz([300,100,300]);
   const M=mtr(lv());const d=devEl('nadia');if(d&&M.k==='batt'){showPhone('nadia');d.classList.add('dead')}
   setTimeout(()=>{
     G.scene='fail';
@@ -1961,6 +2025,7 @@ function openPause(){
   <button class="btn" data-a="startLv" data-v="${G.level}">${esc(t(U.restart))}</button>
   <button class="btn" data-a="howtoIn">${esc(t(U.howto))}</button>
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>${esc(t(U.sound))}</span><div class="seg"><button data-a="snd" data-v="1" aria-pressed="${!!SAVE.sound}">${esc(t(U.on))}</button><button data-a="snd" data-v="0" aria-pressed="${!SAVE.sound}">${esc(t(U.off))}</button></div></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>${G.lang==='id'?'Musik':'Music'}</span><div class="seg"><button data-a="musP" data-v="1" aria-pressed="${SAVE.music!==false}">${esc(t(U.on))}</button><button data-a="musP" data-v="0" aria-pressed="${SAVE.music===false}">${esc(t(U.off))}</button></div></div>
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>${esc(t(U.lang))}</span><div class="seg"><button data-a="setLangIn" data-v="id" aria-pressed="${G.lang==='id'}">ID</button><button data-a="setLangIn" data-v="en" aria-pressed="${G.lang==='en'}">EN</button></div></div>
   <button class="btn" data-a="toMenu">${esc(t(U.quit))}</button>`);
 }
@@ -2043,15 +2108,19 @@ document.addEventListener('click',e=>{
     case 'accGo':accSubmit();break;
     case 'accOut':accLogout();break;
     case 'adminOpen':openAdmin();break;
+    case 'sbTap':if(o==='nadia'&&G.unlocked&&!G.cut){G.nc?closeNC(o):openNC(o)}break;
+    case 'hiTap':if(o==='nadia'&&!G.unlocked)break;if(G.nc)closeNC(o);else goHome(o);break;
     case 'wlLang':wakeSound(false);if(G.lang!==v){G.lang=v;SAVE.lang=v;persist();document.documentElement.lang=v;showWelcome(true)}break;
     case 'wlSound':if(G.audioOn&&SAVE.sound){SAVE.sound=false;persist();rainSound(false)}else{SAVE.sound=true;persist();wakeSound(true)}showWelcome(true);break;
     case 'settings':openSettings();break;
     case 'langM':G.lang=v;SAVE.lang=v;persist();closeSheet();showMenu();openSettings();break;
+    case 'musM':SAVE.music=v==='1';persist();openSettings();break;
+    case 'musP':SAVE.music=v==='1';persist();if(musicOn()&&G.scene==='play')musicStart();else musicStop();openPause();break;
     case 'sndM':SAVE.sound=v==='1';persist();if(SAVE.sound){G.audioOn=true;rainSound(true)}else rainSound(false);openSettings();break;
     case 'fxM':setFx(!SAVE.fx);break;
     case 'fxSet':setFx(v==='1');openSettings();break;
     case 'setLangIn':G.lang=v;SAVE.lang=v;persist();rebuildAll();openPause();break;
-    case 'snd':SAVE.sound=v==='1';persist();openPause();break;
+    case 'snd':SAVE.sound=v==='1';persist();if(SAVE.sound){G.audioOn=true;rainSound(true);musicStart()}else{rainSound(false);musicStop()}openPause();break;
     case 'startLv':ctx();closeSheet();startLevel(v,el.dataset.m||(v===G.level&&G.mode&&G.scene!=='menu'?G.mode:null));break;
     case 'thDismiss':dismissThought();break;
     case 'pause':openPause();break;
@@ -2199,7 +2268,7 @@ function dial(v){const L=lv();const D=L.dial&&L.dial[v];
   if(G.fired['dial_'+v]){toast(t(D.again||["Tidak diangkat lagi.","No one picks up this time."]));return}
   D.id=v;G.curDial=D;outCall('raka',D)}
 function outCall(o,D){
-  if(G.callOn)return;G.callOn=true;G.cut=true;if(G.board)closeBoard();showPhone(o);
+  if(G.callOn)return;G.callOn=true;G.cut=true;musicDuck(.012);if(G.board)closeBoard();showPhone(o);
   const scr=scrEl(o);const c=document.createElement('div');c.className='call live out';c.id='ocall';
   c.innerHTML=`<h3>${esc(t(D.name))}</h3><div class="sub" id="osub">${G.lang==='id'?'memanggil…':'calling…'}</div><div class="cav" style="background:url(${PHOTOS[D.img]}) center/cover"></div><div class="cap" id="ocap"></div>
   <div class="cbtns"><button class="cb dec end" data-a="oEnd"><i>${I.phoneDown}</i>${esc(t(U.end))}</button></div>`;
@@ -2212,7 +2281,7 @@ function outCall(o,D){
       else outEnd()},ms))},D.ringMs||4400);
 }
 function outEnd(){clearInterval(G.oRing);clearInterval(G.oT);const c=$('#ocall');if(!c)return;const sub=$('#osub');if(sub)sub.textContent=t(U.callEnded);SFX.bad();
-  c.id='ocallx';setTimeout(()=>{c.style.transition='opacity .3s';c.style.opacity=0;setTimeout(()=>c.remove(),300);G.cut=false;G.callOn=false;const D=G.curDial;if(!D)return;G.fired['dial_'+D.id]=1;if(D.onEnd)D.onEnd();if(D.flag)setFlag(D.flag)},900)}
+  c.id='ocallx';musicDuck();setTimeout(()=>{c.style.transition='opacity .3s';c.style.opacity=0;setTimeout(()=>c.remove(),300);G.cut=false;G.callOn=false;const D=G.curDial;if(!D)return;G.fired['dial_'+D.id]=1;if(D.onEnd)D.onEnd();if(D.flag)setFlag(D.flag)},900)}
 
 /* Choice + send */
 function choiceSheet(C){G.choice=C;
@@ -2220,7 +2289,7 @@ function choiceSheet(C){G.choice=C;
 function pickChoice(i){const C=G.choice;if(!C)return;G.choice=null;closeSheet();C.opts[+i].go()}
 function sendEvidence(){const L=lv();if(G.flags.send||!L.onSend)return;G.flags.send=1;renderHud();L.onSend()}
 function endingCine(key,name,lines,last){
-  G.over=true;G.cut=true;G.endKey=key;G.endName=name;closeSheet();if(key!=='late')track('ending',{lv:'bab5',mode:G.mode,x:key});
+  G.over=true;G.cut=true;G.endKey=key;G.endName=name;closeSheet();musicStop();if(key!=='late')track('ending',{lv:'bab5',mode:G.mode,x:key});
   const ep=[{c:'date',x:["Seminggu kemudian · 23.11","A week later · 23:11"]},{x:["HP Ratna masih disita polisi, dalam keadaan mati.","Ratna's phone is still in police custody, switched off."]},{x:["Malam itu HP Raka bergetar sekali.","That night Raka's phone buzzes once."]},{c:'bubble',x:last},{c:'status',x:["Ibu · terakhir dilihat 14 bulan lalu","Mum · last seen 14 months ago"]}];
   later(()=>{if(G.board)closeBoard();runCine(lines.concat(ep),key==='late'?()=>fail(true):finish)},900);
 }
@@ -2988,6 +3057,7 @@ function openSettings(){
   sheet(`<header><h3>${G.lang==='id'?'Pengaturan':'Settings'}</h3><button class="x" data-a="closeSheet" aria-label="${esc(t(U.close))}">${I.x}</button></header>
   <div class="setrow"><span>${esc(t(U.lang))}</span><div class="seg"><button data-a="langM" data-v="id" aria-pressed="${G.lang==='id'}">Indonesia</button><button data-a="langM" data-v="en" aria-pressed="${G.lang==='en'}">English</button></div></div>
   <div class="setrow"><span>${esc(t(U.sound))}</span><div class="seg"><button data-a="sndM" data-v="1" aria-pressed="${!!SAVE.sound}">${esc(t(U.on))}</button><button data-a="sndM" data-v="0" aria-pressed="${!SAVE.sound}">${esc(t(U.off))}</button></div></div>
+  <div class="setrow"><span>${G.lang==='id'?'Musik saat bermain':'Music while playing'}</span><div class="seg"><button data-a="musM" data-v="1" aria-pressed="${SAVE.music!==false}">${esc(t(U.on))}</button><button data-a="musM" data-v="0" aria-pressed="${SAVE.music===false}">${esc(t(U.off))}</button></div></div>
   <div class="setrow"><span>${G.lang==='id'?'Efek hujan dan kilat':'Rain and lightning'}</span><div class="seg"><button data-a="fxSet" data-v="1" aria-pressed="${!!SAVE.fx}">${esc(t(U.on))}</button><button data-a="fxSet" data-v="0" aria-pressed="${!SAVE.fx}">${esc(t(U.off))}</button></div></div>
   ${SHEET_URL?accSettingsHtml():''}
   ${SHEET_URL?`<button class="btn" data-a="rateOpen" data-v="umum">${G.lang==='id'?'Kirim ulasan untuk Last Seen':'Review Last Seen'}</button>`:''}
