@@ -10,7 +10,8 @@
  * Cara pakai:
  * 1. Tempel seluruh isi file ini di Apps Script.
  * 2. Jalankan setup() sekali.
- * 3. Project Settings > Script Properties: tambah ADMIN_KEY berisi kata sandi dasbor admin.
+ * 3. Project Settings > Script Properties: tambah ADMIN_USERS berisi nama pengguna akun game kamu
+ *    (pisahkan dengan koma kalau lebih dari satu). Akun ini bisa membuka Dasbor Admin dari dalam game.
  * 4. Deploy > New deployment > Web app (Execute as: Me, Who has access: Anyone).
  */
 
@@ -133,9 +134,20 @@ function cfg_() {
 }
 
 /* ---------- Admin ---------- */
+function admins_() {
+  return String(PropertiesService.getScriptProperties().getProperty('ADMIN_USERS') || '')
+    .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+}
+function isAdminAcc_(u, tok) {
+  u = uname_(u);
+  if (!u || admins_().indexOf(u) < 0) return false;
+  const f = findUser_(u);
+  return !!f && toks_(f.r).indexOf(String(tok || '')) >= 0;
+}
 function admin_(d) {
   const key = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY');
-  if (!key || String(d.key || '') !== key) { Utilities.sleep(1200); return { ok: false, err: 'key' }; }
+  const byKey = key && String(d.key || '') === key;
+  if (!byKey && !isAdminAcc_(d.u, d.tok)) { Utilities.sleep(1200); return { ok: false, err: 'key' }; }
   switch (d.op) {
     case 'stats': return stats_();
     case 'reviews': return reviews_();
@@ -298,7 +310,7 @@ function accNew_(d) {
     if (findUser_(u)) return { ok: false, err: 'taken' };
     const salt = Utilities.getUuid(), tok = newTok_(), now = new Date();
     tab_(TAB_PEMAIN, HEAD_PEMAIN).appendRow([u, salt, hash_(salt, pin), JSON.stringify([tok]), data, now, now, 0, '']);
-    return { ok: true, u: u, tok: tok };
+    return { ok: true, u: u, tok: tok, admin: admins_().indexOf(u) >= 0 };
   });
 }
 
@@ -321,7 +333,7 @@ function accLogin_(d) {
     sh.getRange(f.row, P.TOK + 1).setValue(JSON.stringify(list));
     sh.getRange(f.row, P.SEEN + 1, 1, 3).setValues([[new Date(), 0, '']]);
     let data = {}; try { data = JSON.parse(r[P.DATA] || '{}'); } catch (e) {}
-    return { ok: true, u: u, tok: tok, data: data };
+    return { ok: true, u: u, tok: tok, data: data, admin: admins_().indexOf(u) >= 0 };
   });
 }
 
@@ -337,7 +349,7 @@ function accLoad_(d) {
   const u = uname_(d.u), f = findUser_(u);
   if (!f || toks_(f.r).indexOf(String(d.tok || '')) < 0) return { ok: false, err: 'tok' };
   let data = {}; try { data = JSON.parse(f.r[P.DATA] || '{}'); } catch (e) {}
-  return { ok: true, data: data };
+  return { ok: true, data: data, admin: admins_().indexOf(u) >= 0 };
 }
 
 function players_() {

@@ -153,14 +153,22 @@ const num=n=>Number(n||0).toLocaleString('id-ID');
 const pct=(a,b)=>b?Math.round(a/b*100):0;
 let KEY='',TAB='sum',STATS=null,REV=null,CACHE={};
 
+const EMB=new URLSearchParams(location.search).get('in')==='1';
+function gameAcc(){try{const s=JSON.parse(localStorage.getItem('lastseen.v2')||'null');return s&&s.acc||null}catch(e){return null}}
+async function accLogin(){
+  $('#login').hidden=true;
+  try{STATS=await api('stats');$('#app').hidden=false;show(TAB)}
+  catch(e){$('#login').hidden=false;$('#loginErr').textContent='Akun game ini belum terdaftar sebagai admin.';$('#loginErr').hidden=false}
+}
 function store(){try{return localStorage.getItem('ls.admin')||sessionStorage.getItem('ls.admin')||''}catch(e){return ''}}
 function save(k,rem){try{(rem?localStorage:sessionStorage).setItem('ls.admin',k)}catch(e){}}
 function forget(){try{localStorage.removeItem('ls.admin');sessionStorage.removeItem('ls.admin')}catch(e){}}
 function toast(m){const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2400)}
 
 async function api(op,extra){
-  const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(Object.assign({a:'admin',key:KEY,op},extra||{}))});
-  const j=await r.json();if(!j.ok&&j.err==='key'){logout(true);throw new Error('key')}return j;
+  const A=gameAcc();
+  const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(Object.assign({a:'admin',key:KEY,u:A&&A.u,tok:A&&A.tok,op},extra||{}))});
+  const j=await r.json();if(!j.ok&&j.err==='key'){if(!(EMB&&!KEY))logout(true);throw new Error('key')}return j;
 }
 
 async function login(k,rem){
@@ -169,7 +177,7 @@ async function login(k,rem){
   catch(e){$('#loginErr').textContent=e.message==='key'?'Kunci admin salah.':'Tidak bisa terhubung ke Apps Script. Periksa koneksi atau alamatnya.';$('#loginErr').hidden=false}
   finally{$('#loginBtn').disabled=false}
 }
-function logout(bad){forget();KEY='';$('#app').hidden=true;$('#login').hidden=false;if(bad){$('#loginErr').textContent='Kunci admin salah atau sudah diganti.';$('#loginErr').hidden=false}}
+function logout(bad){if(EMB&&!KEY){parent.postMessage('ls-admin-close','*');return}forget();KEY='';$('#app').hidden=true;$('#login').hidden=false;if(bad){$('#loginErr').textContent='Kunci admin salah atau sudah diganti.';$('#loginErr').hidden=false}}
 
 function show(tab){
   TAB=tab;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
@@ -335,7 +343,7 @@ function vHelp(){
   <p class="note"><b>Pengumuman</b>: kabar singkat yang muncul di beranda game.</p>
   <p class="note">PIN pemain disimpan teracak (hash), jadi kamu pun tidak bisa melihat PIN lama. Setelah 5 kali salah, akun terkunci 15 menit.</p>
   <p class="note">Data mentah ada di Google Sheet, tab Event, Skor, Ulasan, dan Pemain. Jangan ubah judul kolom di baris pertama.</p>
-  <p class="note">Untuk mengganti kunci admin: Apps Script, Project Settings, Script Properties, ubah ADMIN_KEY. Semua perangkat yang tersimpan akan otomatis keluar.</p></div>`);
+  <p class="note">Dasbor ini dibuka dari game lewat akun admin. Daftar akun admin diatur di Apps Script: Project Settings, Script Properties, ADMIN_USERS (pisahkan dengan koma).</p></div>`);
 }
 
 /* ---------- Mulai ---------- */
@@ -343,7 +351,9 @@ document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.cl
 $('#loginForm').addEventListener('submit',e=>{e.preventDefault();login($('#key').value.trim(),$('#remember').checked)});
 $('#logout').addEventListener('click',()=>logout(false));
 $('#refresh').addEventListener('click',async()=>{const b=$('#refresh');b.disabled=true;try{STATS=await api('stats');REV=null;show(TAB);toast('Data diperbarui.')}catch(e){toast('Gagal memuat.')}finally{b.disabled=false}});
+if(EMB){$('#logout').textContent='Tutup';}
 if(!SHEET_URL){$('#noUrl').hidden=false;$('#loginBtn').disabled=true}
+else if(gameAcc()&&EMB){accLogin()}
 else{const k=store();if(k)login(k,!!localStorage.getItem('ls.admin'))}
 </script>
 </body>

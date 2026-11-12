@@ -623,6 +623,9 @@ svg{display:block}
 .ann button{width:44px;height:44px;margin:-10px -2px -10px 0;display:grid;place-items:center;color:#f3e2b5;flex:none}
 .ann button svg{width:16px;height:16px}
 .acc-card p{line-height:1.5}
+.admin-ov{position:fixed;inset:0;z-index:200;background:#0b0d12;animation:fadeup .3s both}
+.admin-ov iframe{width:100%;height:100%;border:0;display:block}
+.hm-admin{color:var(--gold)}
 .acc-btns{display:flex;gap:8px;flex-wrap:wrap}
 .acc-btns .btn{flex:1;min-width:140px}
 .acc-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
@@ -2034,6 +2037,7 @@ document.addEventListener('click',e=>{
     case 'acc':openAcc(v);break;
     case 'accGo':accSubmit();break;
     case 'accOut':accLogout();break;
+    case 'adminOpen':openAdmin();break;
     case 'wlLang':if(G.lang!==v){G.lang=v;SAVE.lang=v;persist();document.documentElement.lang=v;showWelcome(true)}break;
     case 'settings':openSettings();break;
     case 'langM':G.lang=v;SAVE.lang=v;persist();closeSheet();showMenu();openSettings();break;
@@ -2784,14 +2788,14 @@ let syncT=null;
 function queueSync(){if(!SHEET_URL||!SAVE.acc)return;clearTimeout(syncT);syncT=setTimeout(pushSave,2500)}
 async function pushSave(){const A=SAVE.acc;if(!A)return;try{const r=await sheetCall({a:'acc_save',u:A.u,tok:A.tok,data:saveData()});if(r&&r.err==='tok')accExpired()}catch(e){}}
 async function accPull(){const A=SAVE.acc;if(!SHEET_URL||!A)return;try{const r=await sheetCall({a:'acc_load',u:A.u,tok:A.tok});
-  if(r.err==='tok'){accExpired();return}if(!r.ok)return;const acc=SAVE.acc;const before=JSON.stringify(saveData());
+  if(r.err==='tok'){accExpired();return}if(!r.ok)return;const acc=Object.assign({},SAVE.acc,{admin:!!r.admin});const before=JSON.stringify(saveData());
   SAVE=Object.assign(mergeSave(r.data||{},saveData()),{acc});G.lang=SAVE.lang||G.lang;persist();if(JSON.stringify(saveData())!==before&&G.scene==='menu')showMenu()}catch(e){}}
 function accExpired(){SAVE.acc=null;persist();toast(G.lang==='id'?'Sesi akunmu berakhir. Masuk lagi dengan PIN.':'Your account session ended. Sign in again with your PIN.')}
 function accCardHtml(){if(!SHEET_URL||SAVE.acc)return '';const id=G.lang==='id';
   return `<div class="support acc-card"><p><b>${id?'Simpan progresmu':'Save your progress'}</b><br>${id?'Buat nama pengguna dan PIN 6 angka. Kalau ganti HP, cukup masuk lagi. Tanpa email.':'Pick a username and a 6-digit PIN. Switch phones and just sign in again. No email.'}</p>
   <div class="acc-btns"><button class="btn pri" data-a="acc" data-v="new">${id?'Buat akun':'Create account'}</button><button class="btn" data-a="acc" data-v="login">${id?'Sudah punya akun':'I have an account'}</button></div></div>`}
 function accSettingsHtml(){const id=G.lang==='id';const A=SAVE.acc;
-  if(A)return `<div class="acc-row"><span><small>${id?'Akun':'Account'}</small><b>@${esc(A.u)}</b><em>${id?'Progres tersimpan otomatis':'Progress saves automatically'}</em></span><button class="btn" data-a="accOut">${id?'Keluar':'Sign out'}</button></div>`;
+  if(A)return `${A.admin?`<button class="btn pri" data-a="adminOpen">${id?'Buka Dasbor Admin':'Open admin dashboard'}</button>`:''}<div class="acc-row"><span><small>${id?'Akun':'Account'}</small><b>@${esc(A.u)}</b><em>${id?'Progres tersimpan otomatis':'Progress saves automatically'}</em></span><button class="btn" data-a="accOut">${id?'Keluar':'Sign out'}</button></div>`;
   return `<div class="acc-row"><span><small>${id?'Akun':'Account'}</small><em>${id?'Simpan progres agar bisa dilanjutkan di HP lain.':'Save progress so you can continue on another phone.'}</em></span></div>
   <div class="acc-btns"><button class="btn pri" data-a="acc" data-v="new">${id?'Buat akun':'Create account'}</button><button class="btn" data-a="acc" data-v="login">${id?'Masuk':'Sign in'}</button></div>`}
 function openAcc(mode){G.accMode=mode;const id=G.lang==='id';const isNew=mode==='new';
@@ -2819,13 +2823,18 @@ async function accSubmit(){const id=G.lang==='id';const isNew=G.accMode==='new';
       const M={uname:id?'Nama pengguna tidak valid.':'Invalid username.',weak:id?'PIN terlalu mudah ditebak. Hindari 123456 atau angka kembar.':'PIN is too easy to guess. Avoid 123456 or repeated digits.',taken:id?'Nama pengguna sudah dipakai. Coba yang lain.':'That username is taken. Try another.',name:id?'Nama ini tidak bisa dipakai.':"This name can't be used.",
         cred:id?`Nama pengguna atau PIN salah.${r.left?` Sisa ${r.left} percobaan.`:''}`:`Wrong username or PIN.${r.left?` ${r.left} tries left.`:''}`,locked:id?`Terlalu banyak percobaan. Coba lagi dalam ${r.wait} menit.`:`Too many tries. Try again in ${r.wait} minutes.`};
       return err(M[r.err]||(id?'Gagal. Coba lagi.':'Failed. Try again.'))}
-    SAVE.acc={u:r.u,tok:r.tok};
+    SAVE.acc={u:r.u,tok:r.tok,admin:!!r.admin};
     if(!isNew)SAVE=Object.assign(mergeSave(r.data||{},saveData()),{acc:SAVE.acc});
     SAVE.nick=r.u;persist();pushSave();closeSheet();
     toast(isNew?(id?`Akun @${r.u} dibuat. Progres tersimpan.`:`Account @${r.u} created. Progress saved.`):(id?`Selamat datang lagi, @${r.u}.`:`Welcome back, @${r.u}.`));
     const c=$('.acc-card');if(c)c.outerHTML=`<p class="fine rate-done">${id?'Progres tersimpan di akun':'Progress saved to'} @${esc(r.u)}</p>`;
     if(G.scene==='menu'){showMenu();openSettings()}
   }catch(e){b.disabled=false;b.textContent=isNew?(id?'Buat akun':'Create account'):(id?'Masuk':'Sign in');err(id?'Tidak bisa terhubung. Periksa koneksi.':"Couldn't connect. Check your connection.")}}
+const IC_ADMIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.3-2.9 8-7 9.5-4.1-1.5-7-5.2-7-9.5V6z"/><path d="M9 12l2 2 4-4" stroke-linecap="round"/></svg>';
+function openAdmin(){if(!SAVE.acc||!SAVE.acc.admin)return;closeSheet();const o=$('.admin-ov');if(o)o.remove();
+  const d=document.createElement('div');d.className='admin-ov';d.setAttribute('role','dialog');d.setAttribute('aria-label',G.lang==='id'?'Dasbor admin':'Admin dashboard');
+  d.innerHTML=`<iframe src="admin.html?in=1" title="Dasbor admin"></iframe>`;document.body.appendChild(d);rainSound(false)}
+window.addEventListener('message',e=>{if(e.data==='ls-admin-close'){const o=$('.admin-ov');if(o)o.remove();if(SAVE.sound&&G.audioOn)rainSound(true)}});
 function accLogout(){const id=G.lang==='id';SAVE.acc=null;persist();closeSheet();toast(id?'Kamu keluar dari akun di HP ini. Progres di HP ini tetap ada.':'Signed out on this phone. Progress here stays.');if(G.scene==='menu'){showMenu();openSettings()}}
 function annHtml(){const c=G.cfg;if(!c||!c.ann||SAVE.annSeen===c.annId)return '';
   return `<div class="ann" role="status"><span>${esc(c.ann)}</span><button data-a="annX" aria-label="${G.lang==='id'?'Tutup pengumuman':'Dismiss announcement'}">${I.x}</button></div>`}
@@ -2933,6 +2942,7 @@ function showMenu(){
   const d=scene(`
     <header class="hm-top"><div class="hm-brand"><h1 class="hm-word">last seen</h1><span class="hm-st" id="lst">${lsTxt}</span></div>
       <button class="hm-ib" data-a="fxM" aria-pressed="${!!SAVE.fx}" aria-label="${G.lang==='id'?'Efek hujan':'Rain effect'}">${IC_RAIN}</button>
+      ${SAVE.acc&&SAVE.acc.admin&&SHEET_URL?`<button class="hm-ib hm-admin" data-a="adminOpen" aria-label="${G.lang==='id'?'Dasbor admin':'Admin dashboard'}">${IC_ADMIN}</button>`:''}
       <button class="hm-ib" data-a="settings" aria-label="${G.lang==='id'?'Pengaturan':'Settings'}">${IC_GEAR}</button></header>
     ${annHtml()}
     <p class="hm-hook">${G.lang==='id'?'Nadia tidak pulang sejak Jumat malam.':"Nadia hasn't come home since Friday night."}<span>${G.lang==='id'?'HP-nya ditemukan di peron stasiun. Kamu kakaknya, dan kamu yang memegang HP itu sekarang.':"Her phone was found on a station platform. You're her brother, and now the phone is in your hands."}</span></p>
