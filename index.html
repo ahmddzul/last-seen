@@ -2772,7 +2772,7 @@ function dcShare(){
 
 const IG_URL='https://instagram.com/ahmddzul',SAW_URL='https://saweria.co/ahmddzul';
 /* Google Sheet (Apps Script web app). Kosong = papan skor contoh, tanpa statistik. */
-const SHEET_URL='';
+const SHEET_URL='https://script.google.com/macros/s/AKfycbySsmF-bx0_7XNaFWzm95QTw8zeXMcc8vokbnVH5Bt8-So5n6XqrO7qa5-MzP3-2-hM/exec';
 function uid(){try{let v=localStorage.getItem('lastseen.id');if(!v){v=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('lastseen.id',v)}return v}catch(e){return 'anon'}}
 function track(e,o){if(!SHEET_URL)return;try{fetch(SHEET_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain'},body:JSON.stringify(Object.assign({a:'ev',e,id:uid(),lang:G.lang},o||{}))}).catch(()=>{})}catch(x){}}
 async function sheetCall(body){const r=await fetch(SHEET_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.json()}
