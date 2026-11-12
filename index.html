@@ -778,6 +778,8 @@ svg{display:block}
 .s2-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .s2-strip img{aspect-ratio:1;border-radius:10px}
 .lvl.s2{opacity:.55}
+.saw7{margin:0;text-align:center;line-height:1.5}
+.saw7 a{color:#e9b949;font-weight:600;text-decoration:underline;text-underline-offset:3px;display:inline-block;min-height:44px;line-height:44px}
 .wa-b.hoax{display:flex;flex-direction:column;gap:4px;padding:8px 10px}
 .wa-b.hoax .fwd{font-size:12px;font-style:italic;color:#8696a0}
 .hx{text-align:left;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);font-size:15px;line-height:1.4;min-height:44px;color:inherit}
@@ -1869,7 +1871,7 @@ function finish(){
     <div class="score" id="sc">0</div>
     <div class="rank">${esc(t(U.ranks[st-1]))}${isBest&&prev?` · ${G.lang==='id'?'Rekor baru':'New best'}`:''}</div>
     <div class="crit">${ok(true,U.c1)}${ok(s2,U.c2)}${L.secrets.length?ok(s3,G.mode==='story'?[U.c3[0]+' (mode Detektif)',U.c3[1]+' (Detective mode)']:U.c3):ok(true,U.c3none)}</div>
-    ${L.id!=='prolog'?`<div class="support"><p>${G.lang==='id'?'Suka ceritanya? Last Seen gratis dan akan tetap gratis. Kalau berkenan, kamu bisa traktir kopi pembuatnya.':'Enjoyed the story? Last Seen is free and will stay free. If you like, you can buy its maker a coffee.'}</p><a href="${SAW_URL}" target="_blank" rel="noopener">${G.lang==='id'?'Traktir kopi di Saweria':'Buy a coffee on Saweria'}</a></div>`:''}
+    ${L.id!=='prolog'?`<div class="support"><p>${L.id==='bab5'?(G.lang==='id'?'Kamu sudah menjemput Nadia pulang. Season 2 sedang digarap. Kalau mau membantu Nenek Siti ditemukan lebih cepat, kamu bisa dukung pembuatnya.':"You brought Nadia home. Season 2 is in the works. If you'd like to help Grandma Siti get found sooner, you can support its maker."):(G.lang==='id'?'Suka ceritanya? Last Seen gratis dan akan tetap gratis. Kalau berkenan, kamu bisa traktir kopi pembuatnya.':'Enjoyed the story? Last Seen is free and will stay free. If you like, you can buy its maker a coffee.')}</p><a href="${SAW_URL}" target="_blank" rel="noopener">${G.lang==='id'?'Traktir kopi di Saweria':'Buy a coffee on Saweria'}</a></div>`:''}
     ${miss.length?`<p class="miss"><b>${esc(t(U.missed))} (${miss.length}):</b> ${miss.map(s=>esc(t(s.tease))).join(' · ')}</p>`:''}
     ${L.id==='bab5'?`<p class="miss" style="text-align:center">${G.lang==='id'?'Ulangi Bab 3 dan ambil pilihan lain untuk melihat ending berbeda.':'Replay Chapter 3 and choose differently to see another ending.'}</p>`:''}
     <div class="btns" style="width:100%;max-width:340px">${nextBtn}<button class="btn ${st<3?'':''}" data-a="startLv" data-v="${L.id}">${esc(t(st<3?U.replay:U.replay2))}</button><button class="btn" data-a="toMenu">${esc(t(U.toMenu))}</button></div>`,'result');
@@ -2677,10 +2679,12 @@ function dcResult(){
   const DN=G.lang==='id'?['M','S','S','R','K','J','S']:['S','M','T','W','T','F','S'];
   const wk=[6,5,4,3,2,1,0].map(b=>DN[new Date(now.getFullYear(),now.getMonth(),now.getDate()-b).getDay()]);
   const days=Math.min(7,streak);
+  const sawOnce=!d.archive&&streak>=7&&!saved.saw7;if(sawOnce){saved.saw7=1;persist()}
   scene(`<div class="dc-top"><button class="x" data-a="toMenu" aria-label="${esc(t(U.close))}">${I.x}</button><span class="tt"><small>${G.lang==='id'?'Kasus Harian':'Daily Case'}${d.no?' #'+d.no:''}</small><b>${esc(t(c.title))}</b></span></div>
   <div class="bigstars">${[0,1,2].map(i=>I.star.replace('<svg',`<svg class="${i<stars?'on':''}" style="animation-delay:${.2+i*.35}s"`)).join('')}</div>
   <div class="rank" style="text-align:center">${d.fail?(G.lang==='id'?'Belum terpecahkan':'Not solved'):stars===3?(G.lang==='id'?'Sempurna':'Perfect'):(G.lang==='id'?'Terpecahkan':'Solved')} · ${fmtSec(d.time)} · ${d.wrong} ${G.lang==='id'?'salah':'wrong'}</div>
   ${d.archive?'':`<div class="stk"><span class="n">${streak}</span><p><b>${G.lang==='id'?'hari berturut-turut':'day streak'}</b>${G.lang==='id'?`Terbaik: ${saved.best} hari. Bolos sehari per minggu tidak memutus streak.`:`Best: ${saved.best} days. Missing one day a week won't break it.`}<span class="week">${wk.map((w,j)=>`<i class="${j>=7-days?'on':''}">${w}</i>`).join('')}</span></p></div>`}
+  ${sawOnce?`<p class="fine saw7">${G.lang==='id'?'Tujuh hari berturut-turut. Terima kasih sudah setia.':'Seven days in a row. Thanks for sticking around.'} <a href="${SAW_URL}" target="_blank" rel="noopener">${G.lang==='id'?'Dukung di Saweria':'Support on Saweria'}</a></p>`:''}
   <div class="share" id="sharebox">${esc(share)}</div>
   <button class="btn pri" data-a="dcShare">${G.lang==='id'?'Salin hasil untuk dibagikan':'Copy result to share'}</button>
   <div class="lb"><h4>${G.lang==='id'?'Papan teman hari ini':"Friends today"}<span>${G.lang==='id'?'contoh data':'sample data'}</span></h4>${fr.map((f,k)=>`<div class="${f.me?'me':''}"><span class="rk">${k+1}</span><span>${esc(f.n)}</span><span class="st">${'★'.repeat(f.s)||'0'}</span><span>${fmtSec(f.t)}</span></div>`).join('')}</div>
