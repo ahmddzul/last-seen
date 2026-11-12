@@ -733,9 +733,28 @@ svg{display:block}
 .hm-daily .m b{display:flex;align-items:center;gap:8px;font-size:15.5px;font-weight:600}
 .hm-daily .m > span{display:block;font-size:13px;color:#a7afc0;margin-top:3px}
 .hm-daily .chev{color:#a7afc0}
-.hm-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;animation:fadeup .7s .6s both}
-.hm-row button{min-height:48px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(10,12,18,.6);font-weight:600;font-size:15px}
+.hm-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;animation:fadeup .7s .6s both}
+.hm-row .s2t{position:relative;overflow:hidden;padding:6px 8px;line-height:1.15}
+.hm-row .s2t img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45}
+.hm-row .s2t span{position:relative;display:flex;flex-direction:column;align-items:center}
+.hm-row .s2t small{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#d7dbe6;font-weight:600}
+.hm-row button{min-height:48px;padding:10px 6px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(10,12,18,.6);font-weight:600;font-size:15px}
 .hm-row button:hover{background:rgba(255,255,255,.08)}
+.hm-row button{font-size:14px}
+
+.hm-hook{margin-top:clamp(8px,4vh,48px)!important}
+.hm-credits{margin-top:auto;padding-top:2px}
+@media (max-height:780px){
+  .menu{gap:12px}
+  .hm-hook{font-size:clamp(19px,5.6vw,23px)}
+  .hm-hook span{display:none}
+  .hm-main{padding:14px 16px 14px}
+  .hm-cta{margin-top:8px;padding:12px}
+  .hm-daily{padding:10px 12px}
+  .hm-foot{display:none}
+  .menu:has(.ann) .hm-hook{display:none}
+}
+@media (max-height:620px){.hm-meta{display:none}.hm-daily .m>span{display:none}}
 .hm-foot{font-size:12.5px;color:#a7afc0;margin:0;line-height:1.5}
 .setrow{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:15px}
 
@@ -3044,8 +3063,7 @@ function showMenu(){
       <span class="hm-cta">${esc(t(n.cta))}</span>
     </button>
     <button class="hm-daily" data-a="daily"><span class="ai">${IC_CASE}</span><span class="m"><b>${G.lang==='id'?'Kasus Harian':'Daily Case'}${st?`<span class="flame">${FLAME}${st}</span>`:''}</b><span>${dLine}</span></span>${I.chevR}</button>
-    <button class="hm-s2" data-a="s2"><img src="${PHOTOS.wp_s2}" alt=""><span><small>Season 2 · ${G.lang==='id'?'segera':'coming soon'}</small><b>${G.lang==='id'?'Nomor Bapak':"Dad's Number"}</b></span></button>
-    <div class="hm-row"><button data-a="levels">${G.lang==='id'?'Semua bab':'All chapters'}</button><button data-a="howto">${esc(t(U.howto))}</button></div>
+    <div class="hm-row"><button data-a="levels">${G.lang==='id'?'Semua bab':'All chapters'}</button><button data-a="howto">${esc(t(U.howto))}</button><button class="s2t" data-a="s2"><img src="${PHOTOS.wp_s2}" alt=""><span><small>${G.lang==='id'?'Segera':'Soon'}</small>Season 2</span></button></div>
     <p class="hm-foot">${esc(t(U.phones))}</p>
     <div class="hm-credits">${creditHtml()}${sawHtml()}</div>`,'menu');
   loadCfg();
