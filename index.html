@@ -2041,7 +2041,7 @@ function fail(force){
 
 /* ===== Sheets (pause, hint, objectives) ===== */
 function sheet(html,locked){const o=$('.ov');if(o)o.remove();const d=document.createElement('div');d.className='ov';d.innerHTML=`<div class="sheet">${html}</div>`;if(!locked)d.addEventListener('click',e=>{if(e.target===d)closeSheet()});app.appendChild(d);G.paused=true}
-function closeSheet(){const o=$('.ov');if(o)o.remove();G.paused=false}
+function closeSheet(){const o=$('.ov');if(o)o.remove();G.paused=false;if(G.choice&&!G.over)setTimeout(()=>{if(G.choice&&!$('.ov'))choiceSheet(G.choice)},60)}
 function openPause(){
   sheet(`<header><h3>${esc(t(U.pause))}</h3><button class="x" data-a="closeSheet">${I.x}</button></header>
   <button class="btn pri" data-a="closeSheet">${esc(t(U.resume))}</button>
@@ -2056,11 +2056,13 @@ function openObjectives(){
   const L=lv();const cur=curObjective();
   sheet(`<header><h3>${esc(t(U.objectives))}</h3><button class="x" data-a="closeSheet">${I.x}</button></header>
   ${L.objectives.map(o=>{const done=objDone(o);return `<div class="oli ${done?'done':''} ${cur===o?'cur':''}"><i></i><span>${esc(t(o.x))}</span></div>`}).join('')}
+  ${cur&&cur.act&&allFound()?`<button class="btn pri" data-a="objAct">${G.lang==='id'?'Putuskan sekarang':'Decide now'}</button>`:''}
   ${L.secrets.length?`<p style="font-size:13px;color:var(--mute)">${esc(t(U.secretsOpt))}: ${G.secrets.length}/${L.secrets.length}</p>`:''}`);
 }
 function hintKey(){const L=lv();if(L.objectives[0].id==='unlock'&&!G.unlocked)return 'unlock';const o=curObjective();return o?o.id:null}
 function openHint(){
-  const k=hintKey();if(!k)return;const L=lv();const lvl=G.hintLv[k]||0;const free=L.battery==null;
+  const k=hintKey();if(!k)return;const L=lv();
+  {const ob=L.objectives.find(o=>o.id===k);if(ob&&ob.act&&allFound()){G.choice=null;closeSheet();ob.act();return}}const lvl=G.hintLv[k]||0;const free=L.battery==null;
   const shown=lvl>0?`<p>${esc(t(L.hints[k][lvl-1]))}</p>`:'';
   const can=lvl<3;
   sheet(`<header><h3>${esc(t(U.hintT))}${lvl?` <span style="font-size:13px;color:var(--faint)">${lvl}/3</span>`:''}</h3><button class="x" data-a="closeSheet">${I.x}</button></header>
@@ -2131,6 +2133,7 @@ document.addEventListener('click',e=>{
     case 'accGo':accSubmit();break;
     case 'accOut':accLogout();break;
     case 'adminOpen':openAdmin();break;
+    case 'objAct':{const c=curObjective();G.choice=null;closeSheet();if(c&&c.act)c.act()}break;
     case 'sbTap':if(o==='nadia'&&G.unlocked&&!G.cut){G.nc?closeNC(o):openNC(o)}break;
     case 'hiTap':if(o==='nadia'&&!G.unlocked)break;if(G.nc)closeNC(o);else goHome(o);break;
     case 'wlLang':wakeSound(false);if(G.lang!==v){G.lang=v;SAVE.lang=v;persist();document.documentElement.lang=v;showWelcome(true)}break;
@@ -2532,7 +2535,7 @@ LV.bab3={id:'bab3',req:'bab2',no:["Bab 3","Chapter 3"],title:["Relawan","Volunte
     {id:'d1',x:["Dari mana uang 12 juta Ayah?","Where did Dad's 12 million come from?"]},
     {id:'d2',x:["Apakah Ratna menculik Nadia?","Did Ratna take Nadia?"]},
     {id:'d3',x:["Siapa yang Nadia takuti?","Who is Nadia afraid of?"]},
-    {id:'pick',flag:'picked',x:["Putuskan siapa yang boleh tahu","Decide who gets to know"]}
+    {id:'pick',flag:'picked',act:()=>LV.bab3.choose(),x:["Putuskan siapa yang boleh tahu","Decide who gets to know"]}
   ],
   hints:{
     d1:[["Ipda Sari bertanya soal uang Ayah. Jawabannya ada di chat Ayah di HP Raka, dan di chat Ayah di HP Nadia.","Sari asked about Dad's money. The answer is in Dad's chat on Raka's phone, and Dad's chat on Nadia's phone."],["Sematkan nota toko emas dari Ayah dan pesan Ayah ke Nadia soal UKT.","Pin the gold shop receipt from Dad and Dad's message to Nadia about tuition."],CONN],
@@ -2550,7 +2553,7 @@ LV.bab3={id:'bab3',req:'bab2',no:["Bab 3","Chapter 3"],title:["Relawan","Volunte
     later(()=>addMsgs('raka','ibuR',[{d:["Hari ini","Today"]},{f:'t',x:["Mas Raka. Ini Ratna. Saya yang memakai nomor ini sekarang.","Raka. This is Ratna. I'm the one using this number now."],tm:'now'},{f:'t',x:["Nadia aman di rumah saya. Dia belum mau pulang.","Nadia is safe at my house. She isn't ready to come home."],tm:'now',ev:'e_ratnaAman'},{f:'t',x:["Tolong jangan bilang siapa-siapa dulu. Dia takut sama orang yang dekat dengan kalian.","Please don't tell anyone yet. She's afraid of someone close to you all."],tm:'now',ev:'e_ratnaDekat'},{f:'t',x:["Maaf soal telepon semalam. Saya tidak sanggup bicara.","Sorry about last night's call. I couldn't bring myself to speak."],tm:'now'}]),7000)},
   onFound(d){if(allFound()&&!G.endQ){G.endQ=1;later(LV.bab3.choose,1800)}},
   choose(){
-    G.cut=true;if(G.board)closeBoard();showPhone('raka');
+    if(G.flags.picked||G.over)return;G.cut=true;if(G.board)closeBoard();showPhone('raka');
     choiceSheet({h:["Siapa yang boleh tahu soal Sukabumi?","Who gets to know about Sukabumi?"],p:["Grup relawan punya 128 orang yang siap bergerak malam ini. Ipda Sari lebih lambat, tapi hanya polisi yang tahu.","The volunteer group has 128 people ready to move tonight. Sari is slower, but only the police would know."],
       opts:[{x:["Kirim ke grup relawan","Post it to the volunteer group"],sub:["Lebih banyak orang, lebih cepat sampai.","More people, faster."],go(){bab3After(true)}},
             {x:["Hanya ke Ipda Sari","Only tell Inspector Sari"],sub:["Tidak ada orang lain yang tahu.","No one else will know."],go(){bab3After(false)}}]})}
