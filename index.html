@@ -456,6 +456,12 @@ svg{display:block}
 .hm-daily.first{border-color:rgba(233,185,73,.6);background:linear-gradient(135deg,rgba(233,185,73,.2),rgba(18,20,28,.85) 60%);margin-top:6px}
 .hm-daily .go{flex:none;padding:8px 16px;border-radius:999px;background:#e9b949;color:#1a1408;font-weight:700;font-size:14px}
 .bc.right{outline:3px solid #2e9e5b;outline-offset:2px;box-shadow:0 0 0 6px rgba(46,158,91,.25),0 8px 18px rgba(0,0,0,.35)}
+.ev-found{position:relative;animation:evfound 1.3s ease-out;z-index:3}
+@keyframes evfound{0%{box-shadow:0 0 0 0 rgba(233,185,73,0)}25%{box-shadow:0 0 0 4px rgba(233,185,73,1),0 0 30px rgba(233,185,73,.8);transform:scale(1.03)}100%{box-shadow:0 0 0 2px rgba(233,185,73,.6),0 0 14px rgba(233,185,73,.4);transform:scale(1)}}
+.evf{position:absolute;transform:translateX(-50%);z-index:57;display:inline-flex;gap:5px;align-items:center;white-space:nowrap;padding:4px 10px;border-radius:999px;background:#e9b949;color:#1a1408;font:700 12px/1.2 var(--f);box-shadow:0 4px 12px rgba(0,0,0,.4);animation:evfpop .35s cubic-bezier(.3,1.6,.5,1) both;pointer-events:none}
+.evf svg{width:13px;height:13px}
+.evf{font-size:13px;padding:6px 12px}
+@keyframes evfpop{from{transform:translateX(-50%) scale(.4);opacity:0}}
 .ev-flash{animation:evflash .65s ease-in-out 4;border-radius:10px}
 @keyframes evflash{50%{box-shadow:0 0 0 4px rgba(233,185,73,.95),0 0 24px rgba(233,185,73,.7)}}
 .hint-ring::after{content:"" !important;position:absolute !important;inset:-5px !important;border-radius:14px !important;border:3px solid #ffcf5a !important;background:none !important;animation:hintpulse 1.2s infinite !important;pointer-events:none;z-index:6}
@@ -1357,7 +1363,7 @@ function freshState(id){
   Object.assign(G,{level:id,scene:'play',phone:LV[id].start,unlocked:!!LV[id].unlocked,nav:{raka:[],nadia:[]},pins:[],found:[],secrets:[],wrong:0,hints:0,hintLv:{},
     battery:typeof LV[id].battery==='function'?LV[id].battery():LV[id].battery,mStart:typeof LV[id].battery==='function'?LV[id].battery():LV[id].battery,min:LV[id].min,acc:0,clockAcc:0,heartAcc:0,ptime:0,unlockAt:0,paused:false,cut:false,over:false,board:false,sel:[],
     fired:{},read:{},extra:JSON.parse(JSON.stringify(LV[id].add||{})),flags:Object.assign({},LV[id].flags||{}),avOv:Object.assign({},LV[id].avOv||{}),endName:null,timers:[],hintTarget:null,idleKey:null,idleMs:0,idleN:0,connecting:false,ibuOpened:false,swallow:false,coach:0,passcode:'',fails:0,ibuState:null,nc:false,thoughtQ:[],thinking:false,seenChats:{},
-    endQ:0,endKey:null,choice:null,fcode:'',callOn:false,curDial:null,ibuAuto:false,asSrc:null});
+    endQ:0,endKey:null,choice:null,pinBusy:false,fcode:'',callOn:false,curDial:null,ibuAuto:false,asSrc:null});
 }
 
 /* ===== Scenes ===== */
@@ -1798,7 +1804,7 @@ function closeNC(o){const nc=$('#dev-nadia .nc');if(nc)nc.classList.remove('open
 function thought(x){G.thoughtQ.push({x,at:Date.now()});if(!G.thinking)nextThought()}
 function nextThought(){
   let q=G.thoughtQ.shift();while(q&&Date.now()-q.at>9000)q=G.thoughtQ.shift();
-  if(!q){G.thinking=false;return}const x=q.x;G.thinking=true;
+  if(!q){G.thinking=false;setTimeout(watchEv,250);return}const x=q.x;G.thinking=true;
   const scr=scrEl(G.phone);if(!scr){G.thinking=false;return}
   $$('.th',app).forEach(e=>e.remove());
   const el=document.createElement('button');el.className='th';el.dataset.a='thDismiss';
@@ -1808,7 +1814,7 @@ function nextThought(){
   const dur=Math.min(9000,3800+t(x).length*60);
   G.thTimer=setTimeout(()=>{if(G.thTok!==tok)return;el.classList.add('out');setTimeout(()=>{el.remove();nextThought()},400)},dur);
 }
-function dismissThought(){G.thTok=(G.thTok||0)+1;clearTimeout(G.thTimer);$$('.th',app).forEach(e=>e.remove());nextThought()}
+function dismissThought(){G.thTok=(G.thTok||0)+1;clearTimeout(G.thTimer);$$('.th',app).forEach(e=>e.remove());nextThought();setTimeout(watchEv,250)}
 function banner(o,app,title,body,onTap,silent){
   const scr=scrEl(o);if(!scr)return;$$('.bnr',scr).forEach(b=>b.remove());
   const b=document.createElement('button');b.className='bnr';
@@ -2114,14 +2120,27 @@ function watchEv(){
   if(EVOBS){EVOBS.disconnect();EVOBS=null}
   if(!('IntersectionObserver' in window)||G.scene!=='play'||G.over)return;
   EVOBS=new IntersectionObserver(es=>es.forEach(en=>{const el=en.target;
-    if(en.isIntersecting&&en.intersectionRatio>=.55){clearTimeout(el._pt);el._pt=setTimeout(()=>autoPin(el),420)}else clearTimeout(el._pt)}),{threshold:[0,.55]});
+    if(en.isIntersecting&&en.intersectionRatio>=.55){clearTimeout(el._pt);el._pt=setTimeout(()=>autoPin(el),1000)}else clearTimeout(el._pt)}),{threshold:[0,.55]});
   $$('.dev.show .pg.top .ev:not(.pinned),.dev.show .nc.open .ev:not(.pinned),.dev.show .lock .ev:not(.pinned)').forEach(el=>EVOBS.observe(el));
 }
+/* Wait until nothing covers the evidence (Raka's thought card, a sheet, a banner), then show a short
+   "found it" moment on the evidence itself before it flies to the board. One at a time. */
+function evVisible(el){const r=el.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return false;
+  return [[.5,.5],[.2,.5],[.8,.5],[.5,.25],[.5,.75]].filter(([fx,fy])=>{const h=document.elementFromPoint(r.left+r.width*fx,r.top+r.height*fy);return h&&(h===el||el.contains(h))}).length>=3}
 function autoPin(el){
-  if(G.over||G.cut||G.board||!el.isConnected||!el.closest('.dev.show'))return;
+  if(G.over||G.board||!el.isConnected||!el.closest('.dev.show'))return;
   const id=el.dataset.ev;if(!id||G.pins.includes(id))return;
-  G.asSrc=el;doPin(id);
-  if(pinToasts<2){pinToasts++;toast(G.lang==='id'?'Bukti otomatis masuk ke Papan Bukti':'Evidence goes straight to the Evidence Board')}
+  const retry=()=>{clearTimeout(el._pt);el._pt=setTimeout(()=>autoPin(el),700)};
+  if(G.cut||G.thinking||G.pinBusy||$('.th',app)||$('.as',app)||$('.ov')||!evVisible(el))return retry();
+  G.pinBusy=true;el.classList.add('ev-found');
+  const scr=el.closest('.scr');let badge=null;
+  if(scr){const r=el.getBoundingClientRect(),sr=scr.getBoundingClientRect();badge=document.createElement('span');badge.className='evf';badge.innerHTML=`${I.search}${G.lang==='id'?'Bukti ditemukan':'Evidence found'}`;
+    badge.style.left=Math.round(r.left-sr.left+r.width/2)+'px';badge.style.top=Math.max(48,Math.round(r.top-sr.top-16))+'px';scr.appendChild(badge)}
+  SFX.evOpen();buzz(14);
+  setTimeout(()=>{if(badge)badge.remove();el.classList.remove('ev-found');G.pinBusy=false;
+    if(G.over||!el.isConnected||G.pins.includes(id))return;
+    G.asSrc=el;doPin(id);
+    if(pinToasts<1){pinToasts++;later(()=>toast(G.lang==='id'?'Tersimpan di Papan Bukti':'Saved to the Evidence Board'),500)}},1300);
 }
 
 /* ===== "Take me there": find which screen holds a piece of evidence and open it ===== */
@@ -2167,7 +2186,7 @@ function showEv(id){
 const COACH=[
   {x:["Ini HP Raka. Ketuk Obrol di dok bawah untuk membaca pesan.","This is Raka's phone. Tap Obrol in the dock to read messages."],sel:'#dev-raka .dockbar [data-v="obrol"]',until:'open:obrol'},
   {x:["Buka grup Keluarga Pratama.","Open the Pratama Family group."],sel:'#dev-raka [data-chat="keluarga"]',until:'chat:keluarga'},
-  {x:["Pesan yang berkilau adalah bukti. Begitu terlihat di layar, bukti otomatis masuk ke Papan Bukti.","Shimmering messages are evidence. Once it's on screen, it goes straight to the Evidence Board."],sel:'#dev-raka [data-ev="p_hp"]',until:'pin:p_hp'},
+  {x:["Pesan yang berkilau adalah bukti. Setelah Raka selesai berpikir, bukti ini ditandai lalu masuk ke Papan Bukti. Ketuk kartu pikiran untuk mempercepat.","Shimmering messages are evidence. Once Raka finishes his thought, it gets marked and goes to the Evidence Board. Tap the thought card to speed it up."],sel:'#dev-raka [data-ev="p_hp"]',until:'pin:p_hp'},
   {x:["Tersimpan di Papan Bukti. Kembali ke daftar chat, lalu buka grup Cari Nadia.","Saved to the board. Go back to the chat list, then open the Find Nadia group."],sel:'#dev-raka .pg.top .ios-back',sel2:'#dev-raka [data-chat="cari"]',until:'chat:cari'},
   {x:["Poster ini juga bukti. Tunggu sebentar sampai ia terbang ke Papan.","This poster is evidence too. Give it a second to fly to the board."],sel:'#dev-raka [data-ev="p_poster"]',until:'pin:p_poster'},
   {x:["Buka Papan Bukti di bawah.","Open the Evidence Board below."],sel:'#dock-board',until:'board'},
