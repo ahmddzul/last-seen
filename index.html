@@ -443,6 +443,21 @@ svg{display:block}
 .th .tap{display:block;font-family:var(--f);font-size:11px;color:#6b604e;margin-top:6px}
 @keyframes thin{from{opacity:0;transform:translateY(16px) scale(.97)}}
 .hint-ring{position:relative}
+.bd-q{position:relative;z-index:2;margin:4px 6px 14px;padding:12px 14px 12px;border-radius:4px;background:#fff8d6;color:#2a2116;box-shadow:0 6px 14px rgba(0,0,0,.35);transform:rotate(-.6deg);display:flex;flex-direction:column;gap:3px;font-family:var(--f-type)}
+.bd-q small{font-family:var(--f);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#8a2b1f}
+.bd-q b{font-size:17px;line-height:1.3}
+.bd-q span{font-family:var(--f);font-size:13px;color:#5d5140}
+.bd-q.done{background:#f3ecd9}
+.bd-qs{display:flex;gap:6px;margin-top:6px}
+.bd-qs button{min-width:44px;min-height:36px;border-radius:999px;border:1.5px solid #8a7a62;font-family:var(--f);font-weight:700;color:#5d5140}
+.bd-qs button[aria-pressed="true"]{background:#2a2116;color:#fff8d6;border-color:#2a2116}
+.dock button.glow{color:#f3c64f;animation:hintglow 1.4s ease-in-out infinite}
+@keyframes hintglow{50%{background:rgba(233,185,73,.18);box-shadow:0 0 18px rgba(233,185,73,.45)}}
+.hm-daily.first{border-color:rgba(233,185,73,.6);background:linear-gradient(135deg,rgba(233,185,73,.2),rgba(18,20,28,.85) 60%);margin-top:6px}
+.hm-daily .go{flex:none;padding:8px 16px;border-radius:999px;background:#e9b949;color:#1a1408;font-weight:700;font-size:14px}
+.bc.right{outline:3px solid #2e9e5b;outline-offset:2px;box-shadow:0 0 0 6px rgba(46,158,91,.25),0 8px 18px rgba(0,0,0,.35)}
+.ev-flash{animation:evflash .65s ease-in-out 4;border-radius:10px}
+@keyframes evflash{50%{box-shadow:0 0 0 4px rgba(233,185,73,.95),0 0 24px rgba(233,185,73,.7)}}
 .hint-ring::after{content:"" !important;position:absolute !important;inset:-5px !important;border-radius:14px !important;border:3px solid #ffcf5a !important;background:none !important;animation:hintpulse 1.2s infinite !important;pointer-events:none;z-index:6}
 @keyframes hintpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,207,90,.6)}50%{box-shadow:0 0 0 10px rgba(255,207,90,0)}}
 .batt.paused{opacity:.65}
@@ -1063,10 +1078,10 @@ const U={
   hpN:["HP Nadia","Nadia"],hpR:["HP Raka","Raka"],board:["Papan Bukti","Board"],hint:["Petunjuk","Hint"],
   objective:["Tujuan","Objective"],tutorial:["Tutorial","Tutorial"],secret:["Rahasia","Secrets"],
   found:["Temuan","Findings"],
-  pinTo:["Sematkan ke Papan Bukti","Pin to Evidence Board"],cancel:["Batal","Cancel"],
+  pinTo:["Temukan ke Papan Bukti","Find to Evidence Board"],cancel:["Batal","Cancel"],
   evFrom:["BUKTI DARI","EVIDENCE FROM"],already:["Bukti ini sudah ada di Papan Bukti.","This is already on your board."],
   pinned:["Disematkan","Pinned"],
-  bdEmpty:["Papan masih kosong. Cari pesan, foto, atau catatan yang berkilau di HP, lalu sematkan di sini.","The board is empty. Look for shimmering messages, photos or notes on the phones, then pin them here."],
+  bdEmpty:["Papan masih kosong. Buka pesan, foto, atau catatan yang berkilau di HP. Bukti otomatis masuk ke sini.","The board is empty. Open the shimmering messages, photos or notes on the phones. Evidence lands here by itself."],
   bdPick:["Ketuk dua kartu yang saling berhubungan","Tap two cards that belong together"],
   bdPick2:["Sekarang ketuk kartu kedua","Now tap the second card"],
   bdCost:["Salah = −2% baterai","Wrong = −2% battery"],
@@ -1289,7 +1304,7 @@ const LV={
     ev:['p_hp','p_poster'],
     ded:[{id:'p1',k:[['p_hp','p_poster']],h:["Nadia meninggalkan HP-nya di stasiun","Nadia left her phone at the station"],b:["HP ditemukan di bangku peron 2, tepat di tempat Nadia terakhir terlihat. Nadia pergi tanpa membawa HP-nya.","The phone was found on platform 2, exactly where Nadia was last seen. She left without it."]}],
     secrets:[],objectives:[{id:'p1',x:["Cari tahu di mana Nadia terakhir terlihat","Find out where Nadia was last seen"]}],
-    hints:{p1:[["Buka Obrol, lalu baca grup Keluarga dan grup Cari Nadia.","Open Obrol, then read the Family group and the Find Nadia group."],["Sematkan pesan Ayah soal HP dan poster dari Dimas.","Pin Dad's message about the phone and Dimas's poster."],["Di Papan Bukti, ketuk kedua kartu itu.","On the board, tap both cards."]]}
+    hints:{p1:[["Buka Obrol, lalu baca grup Keluarga dan grup Cari Nadia.","Open Obrol, then read the Family group and the Find Nadia group."],["Temukan pesan Ayah soal HP dan poster dari Dimas.","Find Dad's message about the phone and Dimas's poster."],["Di Papan Bukti, ketuk kedua kartu itu.","On the board, tap both cards."]]}
   },
   bab1:{id:'bab1',no:["Bab 1","Chapter 1"],title:["Pola","Pattern"],desc:["Baterai 34% · 3 temuan · 3 rahasia","34% battery · 3 findings · 3 secrets"],phones:['raka','nadia'],start:'raka',min:19*60+4,battery:34,drainMs:24000,
     cine:[
@@ -1321,9 +1336,9 @@ const LV={
     ],
     hints:{
       unlock:[["Pindah ke HP Raka, buka Obrol, lalu baca chat dengan Nadia. Ia pernah menjelaskan kodenya.","Switch to Raka's phone, open Obrol and read the chat with Nadia. She once explained her code."],["Buka Foto di HP Raka, lalu foto langit-langit kamar Nadia. Bintangnya tersusun 3×3, sama seperti tombol angka 1 sampai 9.","Open Photos on Raka's phone and look at Nadia's ceiling. The stars sit in a 3×3 grid, like the keys 1 to 9."],["Ikuti garis dari tulisan \"mulai\" di kiri bawah. Kodenya 7 4 1 5 9 3.","Follow the line from \"start\" at the bottom left. The code is 7 4 1 5 9 3."]],
-      d1:[["Di HP Nadia, buka OjekKu dan Peta. Keduanya menyimpan jejak Nadia hari Jumat.","On Nadia's phone, open OjekKu and Maps. Both hold traces of Friday."],["Sematkan perjalanan Jumat 18.40 di OjekKu dan kartu \"Lokasi terakhir\" di Peta.","Pin Friday's 18.40 ride in OjekKu and the \"Last location\" card in Maps."],["Kartu yang tepat sekarang menyala kuning. Hubungkan keduanya di Papan Bukti.","The right cards now glow yellow. Connect them on the board."]],
-      d2:[["Di HP Nadia, baca chat Ibu sampai paling bawah, lalu buka DompetKita.","On Nadia's phone, read Mum's chat to the very end, then open DompetKita."],["Sematkan pesan \"Bu, aku takut\" dan transaksi tarik tunai hari Jumat.","Pin the message \"Mum, I'm scared\" and Friday's cash withdrawal."],["Kartu yang tepat sekarang menyala kuning. Hubungkan keduanya di Papan Bukti.","The right cards now glow yellow. Connect them on the board."]],
-      d3:[["Di chat Ibu, perhatikan tanda centang. Satu centang berarti pesan tidak pernah sampai.","In Mum's chat, watch the ticks. A single tick means the message never arrived."],["Sematkan pesan bulan Februari yang centang satu dan balasan Ibu tanggal 18 Juni.","Pin February's single-tick message and Mum's reply on 18 June."],["Kartu yang tepat sekarang menyala kuning. Hubungkan keduanya di Papan Bukti.","The right cards now glow yellow. Connect them on the board."]]
+      d1:[["Di HP Nadia, buka OjekKu dan Peta. Keduanya menyimpan jejak Nadia hari Jumat.","On Nadia's phone, open OjekKu and Maps. Both hold traces of Friday."],["Temukan perjalanan Jumat 18.40 di OjekKu dan kartu \"Lokasi terakhir\" di Peta.","Find Friday's 18.40 ride in OjekKu and the \"Last location\" card in Maps."],["Kartu yang tepat sekarang menyala kuning. Hubungkan keduanya di Papan Bukti.","The right cards now glow yellow. Connect them on the board."]],
+      d2:[["Di HP Nadia, baca chat Ibu sampai paling bawah, lalu buka DompetKita.","On Nadia's phone, read Mum's chat to the very end, then open DompetKita."],["Temukan pesan \"Bu, aku takut\" dan transaksi tarik tunai hari Jumat.","Find the message \"Mum, I'm scared\" and Friday's cash withdrawal."],["Kartu yang tepat sekarang menyala kuning. Hubungkan keduanya di Papan Bukti.","The right cards now glow yellow. Connect them on the board."]],
+      d3:[["Di chat Ibu, perhatikan tanda centang. Satu centang berarti pesan tidak pernah sampai.","In Mum's chat, watch the ticks. A single tick means the message never arrived."],["Temukan pesan bulan Februari yang centang satu dan balasan Ibu tanggal 18 Juni.","Find February's single-tick message and Mum's reply on 18 June."],["Kartu yang tepat sekarang menyala kuning. Hubungkan keduanya di Papan Bukti.","The right cards now glow yellow. Connect them on the board."]]
     },
     hintTargets:{d1:['e_ojek','e_peron'],d2:['e_takut','e_tunai'],d3:['e_balas','e_centang']},
     idle:{
@@ -1398,14 +1413,14 @@ function showMode(id){
   G.scene='mode';
   scene(`<div class="topbar"><button class="x" data-a="toMenu" aria-label="${esc(t(U.back))}">${I.x}</button><h2>${G.lang==='id'?'Pilih gaya main':'Choose how to play'}</h2></div>
   <div class="btns">
-    <button class="mode" data-a="startLv" data-v="${id}" data-m="story"><span class="tg">${G.lang==='id'?'Disarankan untuk pertama kali':'Recommended first time'}</span><b>${G.lang==='id'?'Cerita':'Story'}</b><p>${G.lang==='id'?`Nikmati ceritanya. ${t(mtr(LV[id]).name)} tetap berjalan untuk ketegangan, tapi tidak akan habis. Maksimal 2 bintang.`:`Enjoy the story. The ${t(mtr(LV[id]).name).toLowerCase()} still runs for tension, but it won't run out. Up to 2 stars.`}</p></button>
+    <button class="mode" data-a="startLv" data-v="${id}" data-m="story"><span class="tg">${G.lang==='id'?'Disarankan untuk pertama kali':'Recommended first time'}</span><b>${G.lang==='id'?'Cerita':'Story'}</b><p>${G.lang==='id'?'Santai: tanpa hitung mundur, salah tidak dihukum, petunjuk gratis dan bisa membawamu langsung ke bukti. Maksimal 2 bintang.':'Relaxed: no countdown, no penalty for mistakes, free hints that can take you straight to the evidence. Up to 2 stars.'}</p></button>
     <button class="mode det" data-a="startLv" data-v="${id}" data-m="detective"><span class="tg">${G.lang==='id'?'Tantangan':'Challenge'}</span><b>${G.lang==='id'?'Detektif':'Detective'}</b><p>${G.lang==='id'?`${t(mtr(LV[id]).name)} bisa habis dan kamu bisa gagal. Satu-satunya cara meraih 3 bintang dan skor tertinggi.`:`The ${t(mtr(LV[id]).name).toLowerCase()} can run out and you can fail. The only way to earn 3 stars and the top score.`}</p></button>
   </div>`);
 }
 function startLevel(id,mode){
   if(LV[id].req&&!SAVE.best[LV[id].req])return;
   if(LV[id].battery!=null&&!mode){showMode(id);return}
-  freshState(id);G.mode=mode||'detective';G.scene='cine';track('start',{lv:id,mode:G.mode});
+  freshState(id);G.q=null;G.keep=null;G.mode=mode||'detective';G.scene='cine';track('start',{lv:id,mode:G.mode});
   const go=()=>{clearScene();G.scene='play';buildPlay();afterStart()};
   if(id==='bab1'&&!SAVE.seenHowto){SAVE.seenHowto=1;persist();runCine(LV[id].cine,()=>showHowto(3,go));}
   else runCine(LV[id].cine,go);
@@ -1427,8 +1442,8 @@ function renderHud(){
   if(L.tutorial&&COACH[G.coach]&&!G.over){mid=`<div class="coach"><small>${esc(t(U.tutorial))} · ${G.coach+1}/${COACH.length}</small>${esc(t(COACH[G.coach].x))}</div>`}
   else{const o=curObjective();mid=`<button class="obj" data-a="objectives"><small>${esc(t(L.no))} · ${esc(t(L.title))}</small><b>${esc(o?t(o.x):t(U.resT))}</b></button>`}
   const live=meterLive();const M=mtr(L);
-  const bat=L.battery!=null?(M.k==='batt'?`<div class="batt ${G.battery<=10&&live?'low':''} ${live?'':'paused'}" id="batt" style="--lv:${Math.max(0,G.battery)/100*2.6}"><i></i>${G.battery}%${live?'':`<span class="zz">${G.lang==='id'?'jeda':'paused'}</span>`}</div>`
-    :`<div class="batt mtr ${G.battery<=M.lowAt&&live?'low':''} ${live?'':'paused'}" id="batt" title="${esc(t(M.name))}"><span class="mi">${M.ic}</span>${esc(M.fmt(Math.max(0,G.battery)))}${live?'':`<span class="zz">${G.lang==='id'?'jeda':'paused'}</span>`}</div>`):'';
+  const bat=L.battery!=null?(M.k==='batt'?`<div class="batt ${G.battery<=10&&live?'low':''} ${live?'':'paused'}" id="batt" style="--lv:${Math.max(0,G.battery)/100*2.6}"><i></i>${G.battery}%${live?'':`<span class="zz">${G.mode==='story'?(G.lang==='id'?'santai':'relaxed'):(G.lang==='id'?'jeda':'paused')}</span>`}</div>`
+    :`<div class="batt mtr ${G.battery<=M.lowAt&&live?'low':''} ${live?'':'paused'}" id="batt" title="${esc(t(M.name))}"><span class="mi">${M.ic}</span>${esc(M.fmt(Math.max(0,G.battery)))}${live?'':`<span class="zz">${G.mode==='story'?(G.lang==='id'?'santai':'relaxed'):(G.lang==='id'?'jeda':'paused')}</span>`}</div>`):'';
   const sec=L.secrets.length?`<div class="secr" title="${esc(t(U.secret))}">${I.dia}${G.secrets.length}/${L.secrets.length}</div>`:'';
   h.innerHTML=`<button class="ham" data-a="pause" aria-label="${esc(t(U.pause))}">${I.menu}</button>${mid}${sec}${bat}`;
 }
@@ -1876,9 +1891,12 @@ function rot(i){return ((i*37)%7-3)*0.9}
 function boardCardHtml(id,i){
   const e=E[id];const used=allDed().some(d=>isFound(d.id)&&d.k.some(p=>p.includes(id)));
   const pol=e.ty==='photo'?`<div class="pol">${e.img?`<img src="${PHOTOS[e.img]}" alt="">`:ill(e.il)}</div>`:'';
-  return `<button class="bc ${e.ty}${G.sel.includes(id)?' sel':''}${used?' used':''}" data-a="card" data-v="${id}" style="--r:${rot(i)}deg"><span class="tack"></span>${pol}<span class="src">${esc(e.s)}</span><span class="tx">${esc(ft(t(e.l)))}</span></button>`;
+  return `<button class="bc ${e.ty}${G.sel.includes(id)?' sel':''}${used?' used':''}${G.keep===id?' right':''}" data-a="card" data-v="${id}" style="--r:${rot(i)}deg"><span class="tack"></span>${pol}<span class="src">${esc(e.s)}</span><span class="tx">${esc(ft(t(e.l)))}</span></button>`;
 }
 const allDed=()=>lv().ded.concat(lv().secrets);
+function qText(d){const o=lv().objectives.find(x=>x.id===d.id);return o?o.x:["Hubungkan dua bukti yang saling berkaitan","Connect two pieces of evidence that belong together"]}
+function boardQ(){const L=lv();const open=L.ded.filter(d=>!isFound(d.id));if(!open.length)return null;
+  const pick=open.find(d=>d.id===G.q);if(pick)return pick;const c=curObjective();return open.find(d=>c&&d.id===c.id)||open[0]}
 const isFound=id=>G.found.includes(id)||G.secrets.includes(id);
 function renderBoard(newId){
   const b=$('#board');if(!b)return;const L=lv();
@@ -1887,10 +1905,13 @@ function renderBoard(newId){
   fd.sort((a,c)=>order.indexOf(a.id)-order.indexOf(c.id));
   const cnt=`<span class="cnt">${esc(t(U.found))} ${G.found.length}/${L.ded.length}</span>${L.secrets.length?`<span class="cnt g">${I.dia.replace('<svg','<svg width="9" height="9" style="display:inline-block;margin-right:3px"')}${G.secrets.length}/${L.secrets.length}</span>`:''}`;
   const concl=fd.length?`<div class="concl">${fd.map((d,i)=>{const sec=L.secrets.includes(d);return `<div class="cc${d.id===newId?' new':''}" style="--r:${i%2?0.8:-0.6}deg" data-cc="${d.id}"><span class="stamp ${sec?'gold':''}">${esc(t(sec?U.secretStamp:U.match))}</span><b>${esc(t(d.h))}</b><p data-tw="${d.id===newId?1:0}">${esc(t(d.b))}</p></div>`}).join('')}</div>`:'';
+  const qd=boardQ();const open=L.ded.filter(d=>!isFound(d.id));
+  const qbox=qd?`<div class="bd-q"><small>${G.lang==='id'?'Pertanyaan':'Question'}${open.length>1?` · ${open.indexOf(qd)+1}/${open.length}`:''}</small><b>${esc(t(qText(qd)))}</b><span>${G.lang==='id'?'Ketuk 2 kartu yang menjawabnya':'Tap the 2 cards that answer it'}</span>${open.length>1?`<div class="bd-qs">${open.map((d,i)=>`<button data-a="bdQ" data-v="${d.id}" aria-pressed="${d===qd}" aria-label="${esc(t(qText(d)))}">${i+1}</button>`).join('')}</div>`:''}</div>`
+    :(G.secrets.length<L.secrets.length&&L.secrets.length?`<div class="bd-q done"><small>${G.lang==='id'?'Semua pertanyaan terjawab':'Every question answered'}</small><span>${G.lang==='id'?`Masih ada ${L.secrets.length-G.secrets.length} rahasia: dua kartu lain yang saling berkaitan.`:`${L.secrets.length-G.secrets.length} secret(s) left: two other cards that belong together.`}</span></div>`:'');
   const cards=G.pins.length?`<div class="cards">${G.pins.map(boardCardHtml).join('')}</div>`:`<div class="bd-empty">${esc(t(U.bdEmpty))}</div>`;
   const ft2=G.pins.length>=2?`<b>${esc(t(G.sel.length?U.bdPick2:U.bdPick))}</b>${L.battery!=null?`<span>${esc(t(mtr(L).cost))}</span>`:''}`:`<span>${esc(t(U.bdPick))}</span>`;
   b.innerHTML=`<div class="bd-hd"><h2>${esc(t(U.board))}</h2>${cnt}<button class="x" data-a="board" aria-label="${esc(t(U.close))}">${I.x}</button></div>
-  <div class="cork" id="cork"><div class="cork-in" id="corkin"><svg class="strings" id="strings"></svg>${concl}${cards}</div></div>
+  <div class="cork" id="cork"><div class="cork-in" id="corkin"><svg class="strings" id="strings"></svg>${qbox}${concl}${cards}</div></div>
   <div class="bd-ft">${ft2}</div>`;
   requestAnimationFrame(()=>{drawStrings();if(newId){const p=$(`[data-tw="1"]`,b);if(p)typewrite(p);const c=$(`[data-cc="${newId}"]`,b);if(c)c.scrollIntoView({block:'nearest',behavior:'smooth'})}});
   coachApply();
@@ -1925,17 +1946,23 @@ function connect(a,b){
     G.connecting=false;
     if(d&&isFound(d.id)){toast(t(U.againLink));G.sel=[];if(p)p.remove();updateSel();return}
     if(d){
-      d.hit=[a,b];const sec=lv().secrets.includes(d);
+      d.hit=[a,b];const sec=lv().secrets.includes(d);G.keep=null;if(!sec)G.q=null;
       if(sec)G.secrets.push(d.id);else G.found.push(d.id);
       G.sel=[];(sec?SFX.secret:SFX.ok)();SFX.stamp();SFX.type(14);buzz(sec?[30,40,30,40,60]:[40,30,60]);
       renderBoard(d.id);renderHud();emit('found:'+d.id);afterFound(d,sec);
     }else{
       G.wrong++;SFX.snap();SFX.bad();buzz([60,40,60]);
       if(p){p.classList.remove('draw');p.style.strokeDashoffset=0;void p.getBBox();p.classList.add('snap');setTimeout(()=>p.remove(),620)}
-      [a,b].forEach(id=>{const c=$(`.bc[data-v="${id}"]`);if(c){c.classList.add('shake');setTimeout(()=>c.classList.remove('shake'),460)}});
-      const n=U.nope[Math.floor(Math.random()*U.nope.length)];toast(t(n));
-      if(lv().battery!=null)drain(2,true);
-      G.sel=[];setTimeout(updateSel,450);
+      // Say how close the guess was, and keep the card that is right for the question on screen
+      const q=boardQ(),inQ=id=>!!q&&q.k.some(pr=>pr.includes(id));
+      const useful=id=>allDed().some(x=>!isFound(x.id)&&x.k.some(pr=>pr.includes(id)));
+      const keep=inQ(a)?a:inQ(b)?b:null;const other=keep?(keep===a?b:a):null;
+      [keep?other:a,keep?null:b].filter(Boolean).forEach(id=>{const c=$(`.bc[data-v="${id}"]`);if(c){c.classList.add('shake');setTimeout(()=>c.classList.remove('shake'),460)}});
+      if(keep){G.keep=keep;toast(G.lang==='id'?'Satu kartu sudah tepat. Cari pasangannya.':'One card is right. Find its partner.')}
+      else if(useful(a)||useful(b))toast(G.lang==='id'?'Kartu ini penting, tapi untuk pertanyaan lain.':"These matter, but for a different question.");
+      else{const n=U.nope[Math.floor(Math.random()*U.nope.length)];toast(t(n))}
+      if(lv().battery!=null)drain(keep?1:2,true);
+      G.sel=keep?[keep]:[];setTimeout(()=>{updateSel();$$('.bc').forEach(c=>c.classList.toggle('right',c.dataset.v===G.keep))},450);
     }
   },620);
 }
@@ -1977,20 +2004,21 @@ function ibuChatEnd(){
 
 /* ===== Battery & time ===== */
 function drain(n,penalty){
-  if(G.battery==null||G.over)return;const M=mtr(lv());G.battery=Math.max(G.mode==='story'?(M.storyMin||5):0,G.battery-n);
+  if(G.battery==null||G.over||G.mode==='story')return;const M=mtr(lv());G.battery=Math.max(G.mode==='story'?(M.storyMin||5):0,G.battery-n);
   renderHud();updateStatus();
   if(penalty){const b=$('#batt');if(b){const m=document.createElement('span');m.className='minus';m.textContent='−'+M.unit(n);b.appendChild(m);setTimeout(()=>m.remove(),1200)}}
   if(lv().onDrain)lv().onDrain();
   if(G.battery<=M.lowAt&&!G.fired.low){G.fired.low=1;M.onLow()}
   if(G.battery<=0)(lv().onFail||fail)();
 }
-function meterLive(){const L=lv();if(L.battery==null||G.board)return false;return mtr(L).k==='batt'?G.phone==='nadia':true}
+function meterLive(){const L=lv();if(L.battery==null||G.board||G.mode==='story')return false;return mtr(L).k==='batt'?G.phone==='nadia':true}
 function tick(){
   if(G.scene!=='play'||G.paused||G.over)return;
   G.ptime+=250;
   if(G.cut)return;
   const L=lv();
   const k=hintKey();if(k!==G.idleKey){G.idleKey=k;G.idleMs=0;G.idleN=0}else G.idleMs+=250;
+  {const hb=$('#dock-hint');if(hb)hb.classList.toggle('glow',!!k&&G.idleMs>(G.mode==='story'?30000:60000)&&!G.cut)}
   if(L.idle&&k&&L.idle[k]){const at=[40000,95000];if(G.idleN<2&&G.idleMs>=at[G.idleN]){thought(L.idle[k][G.idleN]);G.idleN++}}
   if(meterLive()&&!G.callOn){G.acc+=250;if(G.acc>=(L.drainMs||24000)){G.acc=0;drain(1)}}
   if(L.battery!=null){
@@ -2063,33 +2091,92 @@ function openObjectives(){
 function hintKey(){const L=lv();if(L.objectives[0].id==='unlock'&&!G.unlocked)return 'unlock';const o=curObjective();return o?o.id:null}
 function openHint(){
   const k=hintKey();if(!k)return;const L=lv();
-  {const ob=L.objectives.find(o=>o.id===k);if(ob&&ob.act&&allFound()){G.choice=null;closeSheet();ob.act();return}}const lvl=G.hintLv[k]||0;const free=L.battery==null;
+  {const ob=L.objectives.find(o=>o.id===k);if(ob&&ob.act&&allFound()){G.choice=null;closeSheet();ob.act();return}}G.idleMs=0;const lvl=G.hintLv[k]||0;const free=L.battery==null||G.mode==='story';
+  const tg=(L.hintTargets&&L.hintTargets[k])||[];const need=tg.find(x=>!G.pins.includes(x));
   const shown=lvl>0?`<p>${esc(t(L.hints[k][lvl-1]))}</p>`:'';
   const can=lvl<3;
   sheet(`<header><h3>${esc(t(U.hintT))}${lvl?` <span style="font-size:13px;color:var(--faint)">${lvl}/3</span>`:''}</h3><button class="x" data-a="closeSheet">${I.x}</button></header>
   <p style="font-size:14px;color:var(--mute)">${esc(t(curObjective()?curObjective().x:''))}</p>${shown}
-  ${can?`<p class="cost">${esc(t(free?U.hintFree:mtr(L).hint))}</p><button class="btn pri" data-a="useHint">${esc(t(lvl?U.nextHint:U.showHint))}</button>`:''}`);
+  ${lvl>=2&&need?`<button class="btn pri" data-a="showEv" data-v="${need}">${G.lang==='id'?'Bawa aku ke buktinya':'Take me to the evidence'}</button>`:''}
+  ${lvl>=2&&tg.length&&!need?`<button class="btn pri" data-a="board">${G.lang==='id'?'Buka Papan Bukti':'Open the Evidence Board'}</button>`:''}
+  ${can?`<p class="cost">${esc(t(free?U.hintFree:mtr(L).hint))}</p><button class="btn ${lvl>=2&&tg.length?'':'pri'}" data-a="useHint">${esc(t(lvl?U.nextHint:U.showHint))}</button>`:''}`);
 }
 function useHint(){
   const k=hintKey();if(!k)return;const L=lv();G.hintLv[k]=Math.min(3,(G.hintLv[k]||0)+1);
   if(G.hintLv[k]===3&&L.hintTargets&&L.hintTargets[k]){G.hintTarget=L.hintTargets[k];coachApply()}
-  if(L.battery!=null){G.hints++;closeSheet();drain(3,true);if(G.over)return}
+  if(L.battery!=null&&G.mode!=='story'){G.hints++;closeSheet();drain(3,true);if(G.over)return}
   openHint();
+}
+
+/* ===== Auto-collect: shimmering evidence pins itself once it has been on screen for a moment ===== */
+let EVOBS=null,pinToasts=0;
+function watchEv(){
+  if(EVOBS){EVOBS.disconnect();EVOBS=null}
+  if(!('IntersectionObserver' in window)||G.scene!=='play'||G.over)return;
+  EVOBS=new IntersectionObserver(es=>es.forEach(en=>{const el=en.target;
+    if(en.isIntersecting&&en.intersectionRatio>=.55){clearTimeout(el._pt);el._pt=setTimeout(()=>autoPin(el),420)}else clearTimeout(el._pt)}),{threshold:[0,.55]});
+  $$('.dev.show .pg.top .ev:not(.pinned),.dev.show .nc.open .ev:not(.pinned),.dev.show .lock .ev:not(.pinned)').forEach(el=>EVOBS.observe(el));
+}
+function autoPin(el){
+  if(G.over||G.cut||G.board||!el.isConnected||!el.closest('.dev.show'))return;
+  const id=el.dataset.ev;if(!id||G.pins.includes(id))return;
+  G.asSrc=el;doPin(id);
+  if(pinToasts<2){pinToasts++;toast(G.lang==='id'?'Bukti otomatis masuk ke Papan Bukti':'Evidence goes straight to the Evidence Board')}
+}
+
+/* ===== "Take me there": find which screen holds a piece of evidence and open it ===== */
+function evPaths(){
+  const L=lv(),out=[];
+  L.phones.forEach(o=>{
+    const apps=homeGrid(o).concat(HOMES[o].dock);
+    if(apps.includes('obrol'))(L.chats[o]||[]).forEach(c=>out.push({o,app:'obrol',st:[{k:'chat',v:c}]}));
+    if(apps.includes('foto')){(L.photos[o]||[]).forEach(ph=>out.push({o,app:'foto',st:[{k:'photo',v:ph}]}));
+      if(L.zoom&&(L.photos[o]||[]).includes('n_bts'))out.push({o,app:'foto',st:[{k:'photo',v:'n_bts'},{k:'zoom',v:'n_bts'}]})}
+    ['peta','ojek','dompet','telepon','kilas'].forEach(a=>{if(apps.includes(a))out.push({o,app:a,st:[]})});
+    if(apps.includes('catatan')&&o==='nadia')Object.keys(NOTES).filter(k=>!NOTES[k].hidden).forEach(n=>out.push({o,app:'catatan',st:[{k:'note',v:n}]}));
+    if(apps.includes('berkas'))Object.keys(FOLDERS).forEach(f=>FOLDERS[f].items.forEach(it=>out.push({o,app:'berkas',st:[{k:'folder',v:f},{k:PH[it]?'photo':'note',v:it}]})));
+    if(o==='nadia')out.push({o,nc:1});
+  });
+  return out;
+}
+function findEv(id){
+  for(const pth of evPaths()){
+    let h='';
+    try{if(pth.nc){const nc=$('#dev-nadia .nc');if(!nc)continue;fillNC('nadia');h=nc.innerHTML}
+      else{const last=pth.st.length?pth.st[pth.st.length-1]:{k:pth.app};h=makePage(pth.o,last).innerHTML}}catch(e){continue}
+    if(h.includes(`data-ev="${id}"`))return pth;
+  }
+  return null;
+}
+function showEv(id){
+  const pth=findEv(id);closeSheet();
+  if(!pth){toast(G.lang==='id'?'Bukti ini muncul nanti dalam cerita.':'This evidence appears later in the story.');return}
+  if(G.board)closeBoard();showPhone(pth.o);
+  if(pth.o==='nadia'&&!G.unlocked){toast(G.lang==='id'?'Buka kunci HP Nadia dulu.':"Unlock Nadia's phone first.");return}
+  if(pth.nc){openNC('nadia')}
+  else{
+    closeNC(pth.o);
+    const locked=pth.app==='berkas'&&pth.st[0]&&FOLDERS[pth.st[0].v]&&FOLDERS[pth.st[0].v].lock&&!G.flags.folder;
+    openApp(pth.o,pth.app,null,true);
+    (locked?pth.st.slice(0,1):pth.st).forEach(x=>push(pth.o,x.k,x.v,true));
+  }
+  later(()=>{const el=$(`.dev.show [data-ev="${id}"]`);if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('ev-flash');setTimeout(()=>el.classList.remove('ev-flash'),2600)}},420);
 }
 
 /* ===== Tutorial coach ===== */
 const COACH=[
   {x:["Ini HP Raka. Ketuk Obrol di dok bawah untuk membaca pesan.","This is Raka's phone. Tap Obrol in the dock to read messages."],sel:'#dev-raka .dockbar [data-v="obrol"]',until:'open:obrol'},
   {x:["Buka grup Keluarga Pratama.","Open the Pratama Family group."],sel:'#dev-raka [data-chat="keluarga"]',until:'chat:keluarga'},
-  {x:["Pesan yang berkilau adalah bukti. Ketuk pesan Ayah soal HP Nadia, lalu pilih Sematkan.","Shimmering messages are evidence. Tap Dad's message about Nadia's phone, then choose Pin."],sel:'#dev-raka [data-ev="p_hp"]',until:'pin:p_hp'},
+  {x:["Pesan yang berkilau adalah bukti. Begitu terlihat di layar, bukti otomatis masuk ke Papan Bukti.","Shimmering messages are evidence. Once it's on screen, it goes straight to the Evidence Board."],sel:'#dev-raka [data-ev="p_hp"]',until:'pin:p_hp'},
   {x:["Tersimpan di Papan Bukti. Kembali ke daftar chat, lalu buka grup Cari Nadia.","Saved to the board. Go back to the chat list, then open the Find Nadia group."],sel:'#dev-raka .pg.top .ios-back',sel2:'#dev-raka [data-chat="cari"]',until:'chat:cari'},
-  {x:["Poster ini juga bukti. Ketuk dan sematkan.","This poster is evidence too. Tap and pin it."],sel:'#dev-raka [data-ev="p_poster"]',until:'pin:p_poster'},
+  {x:["Poster ini juga bukti. Tunggu sebentar sampai ia terbang ke Papan.","This poster is evidence too. Give it a second to fly to the board."],sel:'#dev-raka [data-ev="p_poster"]',until:'pin:p_poster'},
   {x:["Buka Papan Bukti di bawah.","Open the Evidence Board below."],sel:'#dock-board',until:'board'},
-  {x:["Ketuk satu kartu, lalu kartu lainnya. Kalau keduanya berhubungan, benang merah akan terpasang.","Tap one card, then the other. If they belong together, the red string holds."],sel:'.bc',until:'found:p1'},
-  {x:["Itu dia. Di Bab 1, baterai HP Nadia adalah waktumu. Salah hubung akan menguras baterai.","That's it. In Chapter 1, Nadia's battery is your clock. Wrong links drain it."],sel:null,until:'never'}
+  {x:["Di atas papan ada pertanyaan. Ketuk dua kartu yang menjawabnya. Kalau tepat, benang merah terpasang.","The question sits at the top of the board. Tap the two cards that answer it. If they fit, the red string holds."],sel:'.bc',until:'found:p1'},
+  {x:["Itu dia. Buntu? Ketuk Petunjuk: ia bisa membawamu langsung ke buktinya. Di mode Detektif, salah hubung menguras waktu.","That's it. Stuck? Tap Hint: it can take you straight to the evidence. In Detective mode, wrong links cost you time."],sel:null,until:'never'}
 ];
 function coachSet(i){G.coach=i;renderHud();coachApply()}
 function coachApply(){
+  watchEv();
   $$('.hint-ring').forEach(e=>e.classList.remove('hint-ring'));
   if(G.hintTarget&&!G.over)G.hintTarget.forEach(id=>$$(`[data-ev="${id}"],.bc[data-v="${id}"]`).forEach(e=>e.classList.add('hint-ring')));
   $$('.coach-ring').forEach(e=>e.classList.remove('coach-ring'));
@@ -2134,6 +2221,8 @@ document.addEventListener('click',e=>{
     case 'accGo':accSubmit();break;
     case 'accOut':accLogout();break;
     case 'adminOpen':openAdmin();break;
+    case 'bdQ':G.q=v;G.keep=null;G.sel=[];renderBoard();SFX.tap();break;
+    case 'showEv':showEv(v);break;
     case 'objAct':{const c=curObjective();G.choice=null;closeSheet();if(c&&c.act)c.act()}break;
     case 'sbTap':if(o==='nadia'&&G.unlocked&&!G.cut){G.nc?closeNC(o):openNC(o)}break;
     case 'hiTap':if(o==='nadia'&&!G.unlocked)break;if(G.nc)closeNC(o);else goHome(o);break;
@@ -2462,10 +2551,10 @@ LV.bab2={id:'bab2',req:'bab1',no:["Bab 2","Chapter 2"],title:["Nomor yang Hangus
   ],
   hints:{
     call:[["Di HP Raka, buka aplikasi Telepon.","On Raka's phone, open the Phone app."],["Kontak Ibu ada di daftar Terbaru. Ketuk ikon telepon di sebelahnya.","Mum is in Recents. Tap the phone icon next to her."],["Ketuk ikon telepon di baris Ibu.","Tap the phone icon on Mum's row."]],
-    d1:[["Di HP Raka, baca chat Ayah dari awal. Lalu buka Catatan di HP Nadia.","On Raka's phone, read Dad's chat from the top. Then open Notes on Nadia's phone."],["Sematkan pesan Ayah bulan Januari soal kartu Ibu, dan catatan Nadia berjudul \"Nomor Ibu\".","Pin Dad's January message about Mum's SIM, and Nadia's note titled \"Mum's number\"."],CONN],
-    d2:[["Pesan terakhir di chat Ibu (HP Nadia) menyebut lampu. Nadia juga menulis daftar tugas hari Jumat.","The last message in Mum's chat on Nadia's phone mentions the light. Nadia also wrote a Friday checklist."],["Sematkan pesan \"lampu kamar adikmu\" dan catatan Jumat di aplikasi Catatan.","Pin the \"your sister's light\" message and the Friday note in Notes."],CONN],
+    d1:[["Di HP Raka, baca chat Ayah dari awal. Lalu buka Catatan di HP Nadia.","On Raka's phone, read Dad's chat from the top. Then open Notes on Nadia's phone."],["Temukan pesan Ayah bulan Januari soal kartu Ibu, dan catatan Nadia berjudul \"Nomor Ibu\".","Find Dad's January message about Mum's SIM, and Nadia's note titled \"Mum's number\"."],CONN],
+    d2:[["Pesan terakhir di chat Ibu (HP Nadia) menyebut lampu. Nadia juga menulis daftar tugas hari Jumat.","The last message in Mum's chat on Nadia's phone mentions the light. Nadia also wrote a Friday checklist."],["Temukan pesan \"lampu kamar adikmu\" dan catatan Jumat di aplikasi Catatan.","Find the \"your sister's light\" message and the Friday note in Notes."],CONN],
     sd:[["Ada aplikasi baru di layar utama HP Nadia.","There's a new app on Nadia's home screen."],["Buka Berkas, lalu folder Cadangan.","Open Files, then the Backup folder."],["Di HP Nadia: Berkas, lalu ketuk Cadangan.","On Nadia's phone: Files, then tap Backup."]],
-    d3:[["Bandingkan nomor telepon. Satu ada di kontak Ibu di HP Raka, satu lagi di riwayat DompetKita Nadia.","Compare phone numbers. One is in Mum's contact on Raka's phone, the other in Nadia's DompetKita history."],["Sematkan baris Ibu di Telepon Raka dan transfer ke RATNA KUSUMA.","Pin Mum's row in Raka's Phone app and the transfer to RATNA KUSUMA."],CONN]
+    d3:[["Bandingkan nomor telepon. Satu ada di kontak Ibu di HP Raka, satu lagi di riwayat DompetKita Nadia.","Compare phone numbers. One is in Mum's contact on Raka's phone, the other in Nadia's DompetKita history."],["Temukan baris Ibu di Telepon Raka dan transfer ke RATNA KUSUMA.","Find Mum's row in Raka's Phone app and the transfer to RATNA KUSUMA."],CONN]
   },
   hintTargets:{d1:['e_pulsa','e_daurulang'],d2:['e_lampuIbu','e_daftar'],d3:['e_ratnaNo','e_ibuNo']},
   idle:{call:[["Aku harus mendengar sendiri siapa yang memegang nomor itu.","I need to hear for myself who has that number."],["Telepon. Dari HP-ku.","Call it. From my phone."]],
@@ -2539,9 +2628,9 @@ LV.bab3={id:'bab3',req:'bab2',no:["Bab 3","Chapter 3"],title:["Relawan","Volunte
     {id:'pick',flag:'picked',act:()=>LV.bab3.choose(),x:["Putuskan siapa yang boleh tahu","Decide who gets to know"]}
   ],
   hints:{
-    d1:[["Ipda Sari bertanya soal uang Ayah. Jawabannya ada di chat Ayah di HP Raka, dan di chat Ayah di HP Nadia.","Sari asked about Dad's money. The answer is in Dad's chat on Raka's phone, and Dad's chat on Nadia's phone."],["Sematkan nota toko emas dari Ayah dan pesan Ayah ke Nadia soal UKT.","Pin the gold shop receipt from Dad and Dad's message to Nadia about tuition."],CONN],
-    d2:[["Nomor Ibu baru saja mengirim pesan ke HP Raka. Bandingkan dengan pesan Nadia Kamis malam.","Mum's number just texted Raka. Compare it with Nadia's message on Thursday night."],["Sematkan \"Nadia aman di rumah saya\" dan \"Bu, aku takut\".","Pin \"Nadia is safe at my house\" and \"Mum, I'm scared\"."],CONN],
-    d3:[["Ratna bilang Nadia takut pada orang yang dekat dengan keluarga. Siapa yang paling sibuk bertanya?","Ratna says Nadia fears someone close to the family. Who keeps asking questions?"],["Sematkan pesan Ratna soal \"orang yang dekat\" dan pesan Dimas di grup relawan soal nama kota.","Pin Ratna's message about \"someone close\" and Dimas's message in the volunteer group about a city."],CONN],
+    d1:[["Ipda Sari bertanya soal uang Ayah. Jawabannya ada di chat Ayah di HP Raka, dan di chat Ayah di HP Nadia.","Sari asked about Dad's money. The answer is in Dad's chat on Raka's phone, and Dad's chat on Nadia's phone."],["Temukan nota toko emas dari Ayah dan pesan Ayah ke Nadia soal UKT.","Find the gold shop receipt from Dad and Dad's message to Nadia about tuition."],CONN],
+    d2:[["Nomor Ibu baru saja mengirim pesan ke HP Raka. Bandingkan dengan pesan Nadia Kamis malam.","Mum's number just texted Raka. Compare it with Nadia's message on Thursday night."],["Temukan \"Nadia aman di rumah saya\" dan \"Bu, aku takut\".","Find \"Nadia is safe at my house\" and \"Mum, I'm scared\"."],CONN],
+    d3:[["Ratna bilang Nadia takut pada orang yang dekat dengan keluarga. Siapa yang paling sibuk bertanya?","Ratna says Nadia fears someone close to the family. Who keeps asking questions?"],["Temukan pesan Ratna soal \"orang yang dekat\" dan pesan Dimas di grup relawan soal nama kota.","Find Ratna's message about \"someone close\" and Dimas's message in the volunteer group about a city."],CONN],
     pick:[["Tidak ada jawaban yang dipaksa. Pikirkan siapa yang membaca grup relawan.","No answer is forced. Think about who reads the volunteer group."],["Pilihan ini menentukan ending di Bab 5.","This choice decides the ending in Chapter 5."],["Pilihanmu ada di layar. Ambil yang kamu yakini.","The choice is on screen. Pick what you believe."]]
   },
   hintTargets:{d1:['e_nota','e_ukt'],d2:['e_takut','e_ratnaAman'],d3:['e_ratnaDekat','e_dimasTanya']},
@@ -2614,10 +2703,10 @@ LV.bab4={id:'bab4',req:'bab3',no:["Bab 4","Chapter 4"],title:["Rekening","The Ac
     {id:'d3',x:["Dari mana Dimas tahu?","How does Dimas know?"]}
   ],
   hints:{
-    d1:[["Buka DompetKita di HP Nadia dan lihat perangkat tertaut. Lalu cari siapa yang mengirim \"uang sampingan\".","Open DompetKita on Nadia's phone and check linked devices. Then find who sent the \"side payment\"."],["Sematkan perangkat DMS-Studio dan pesan Dimas soal uang sampingan.","Pin the DMS-Studio device and Dimas's message about the side payment."],CONN],
+    d1:[["Buka DompetKita di HP Nadia dan lihat perangkat tertaut. Lalu cari siapa yang mengirim \"uang sampingan\".","Open DompetKita on Nadia's phone and check linked devices. Then find who sent the \"side payment\"."],["Temukan perangkat DMS-Studio dan pesan Dimas soal uang sampingan.","Find the DMS-Studio device and Dimas's message about the side payment."],CONN],
     folder:[["Tasya tahu sesuatu soal folder Nadia. Baca chat Tasya di HP Nadia.","Tasya knows something about Nadia's folder. Read Tasya's chat on Nadia's phone."],["Sandinya tanggal lahir Ibu, 6 angka: tanggal, bulan, dua angka tahun. Ayah menyebut ulang tahun Ibu di chat dengan Raka.","It's Mum's birthday, 6 digits: day, month, two-digit year. Dad mentioned her birthday in his chat with Raka."],["Ibu lahir 12 Maret 1976. Ketik 120376 di folder Untuk Kak Raka.","Mum was born on 12 March 1976. Type 120376 in the For Raka folder."]],
-    d2:[["Foto meja studio dari Bab 1 menyimpan sesuatu di layar laptopnya. Buka di Foto HP Nadia, lalu perbesar.","The studio desk photo from Chapter 1 hides something on the laptop screen. Open it in Nadia's Photos and zoom in."],["Sematkan daftar nama hasil perbesar dan foto meja penuh kartu ATM di folder Untuk Kak Raka.","Pin the zoomed list of names and the desk full of ATM cards in the For Raka folder."],CONN],
-    d3:[["Seseorang di grup relawan menyebut detail yang tidak pernah diumumkan.","Someone in the volunteer group mentioned a detail that was never made public."],["Sematkan pesan Dimas soal \"bangku peron 2\" dan pesan Ipda Sari soal lokasi HP.","Pin Dimas's message about \"the bench on platform 2\" and Sari's message about the phone's location."],CONN]
+    d2:[["Foto meja studio dari Bab 1 menyimpan sesuatu di layar laptopnya. Buka di Foto HP Nadia, lalu perbesar.","The studio desk photo from Chapter 1 hides something on the laptop screen. Open it in Nadia's Photos and zoom in."],["Temukan daftar nama hasil perbesar dan foto meja penuh kartu ATM di folder Untuk Kak Raka.","Find the zoomed list of names and the desk full of ATM cards in the For Raka folder."],CONN],
+    d3:[["Seseorang di grup relawan menyebut detail yang tidak pernah diumumkan.","Someone in the volunteer group mentioned a detail that was never made public."],["Temukan pesan Dimas soal \"bangku peron 2\" dan pesan Ipda Sari soal lokasi HP.","Find Dimas's message about \"the bench on platform 2\" and Sari's message about the phone's location."],CONN]
   },
   hintTargets:{d1:['e_perangkat','e_samping'],d2:['e_daftarNama','e_kartuATM'],d3:['e_peron2','e_umum']},
   idle:{d1:[["Seseorang masuk ke akun ini dari perangkat lain. DompetKita pasti mencatatnya.","Someone's signed in from another device. DompetKita must log it."],["\"Uang sampingan.\" Aku pernah membaca itu di chat Dimas.","\"Side payment.\" I read that in Dimas's chat."]],
@@ -2686,10 +2775,10 @@ LV.bab5={id:'bab5',req:'bab4',no:["Bab 5","Chapter 5"],title:["Last Seen","Last 
     {id:'send',flag:'send',x:["Kirim semua bukti ke Ipda Sari","Send everything to Inspector Sari"]}
   ],
   hints:{
-    d3:[["Peta di HP Nadia masih menerima lokasi Dimas. Ke mana tujuannya? Cek riwayat OjekKu Nadia di Sukabumi.","Nadia's Maps still receives Dimas's location. Where is he heading? Check Nadia's OjekKu history in Sukabumi."],["Sematkan lokasi Dimas di Peta dan perjalanan OjekKu ke Gg. Melati 3.","Pin Dimas's location in Maps and the OjekKu ride to Gg. Melati 3."],CONN],
+    d3:[["Peta di HP Nadia masih menerima lokasi Dimas. Ke mana tujuannya? Cek riwayat OjekKu Nadia di Sukabumi.","Nadia's Maps still receives Dimas's location. Where is he heading? Check Nadia's OjekKu history in Sukabumi."],["Temukan lokasi Dimas di Peta dan perjalanan OjekKu ke Gg. Melati 3.","Find Dimas's location in Maps and the OjekKu ride to Gg. Melati 3."],CONN],
     call:[["Ratna harus diperingatkan. Pakai Telepon di HP Raka.","Ratna must be warned. Use the Phone app on Raka's phone."],["Telepon kontak Ibu dari HP Raka.","Call Mum from Raka's phone."],["Buka Telepon di HP Raka, ketuk ikon telepon di baris Ibu.","Open Phone on Raka's phone and tap the call icon on Mum's row."]],
-    d1:[["Polisi butuh bukti sindikatnya: daftar nama dan siapa yang masuk ke akun Nadia.","The police need proof of the ring: the list of names and who signed into Nadia's account."],["Sematkan daftar nama hasil perbesar foto meja studio dan perangkat DMS-Studio di DompetKita.","Pin the zoomed list from the studio desk photo and the DMS-Studio device in DompetKita."],CONN],
-    d2:[["Polisi butuh bukti ancaman. Folder Untuk Kak Raka menyimpan dua.","The police need proof of threats. The For Raka folder holds two."],["Sematkan transkrip pesan suara Dimas dan foto depan rumah.","Pin Dimas's voice note transcript and the photo of the house."],CONN],
+    d1:[["Polisi butuh bukti sindikatnya: daftar nama dan siapa yang masuk ke akun Nadia.","The police need proof of the ring: the list of names and who signed into Nadia's account."],["Temukan daftar nama hasil perbesar foto meja studio dan perangkat DMS-Studio di DompetKita.","Find the zoomed list from the studio desk photo and the DMS-Studio device in DompetKita."],CONN],
+    d2:[["Polisi butuh bukti ancaman. Folder Untuk Kak Raka menyimpan dua.","The police need proof of threats. The For Raka folder holds two."],["Temukan transkrip pesan suara Dimas dan foto depan rumah.","Find Dimas's voice note transcript and the photo of the house."],CONN],
     send:[["Buka chat Ipda Sari di HP Raka.","Open Sari's chat on Raka's phone."],["Tombol kirim muncul setelah tiga temuan lengkap dan kamu sudah menelepon nomor Ibu.","The send button appears once all three findings are in and you've called Mum's number."],["Ketuk \"Kirim semua bukti\" di bawah chat Ipda Sari.","Tap \"Send all evidence\" at the bottom of Sari's chat."]]
   },
   hintTargets:{d3:['e_lokasiD','e_alamat'],d1:['e_daftarNama','e_perangkat'],d2:['e_vn','e_rumahFoto']},
@@ -2840,7 +2929,8 @@ function dcResult(){
   }
   const starTxt=stars?'⭐'.repeat(stars):'❌';
   const lifeTxt='🟥'.repeat(d.wrong)+'⬜'.repeat(Math.max(0,3-d.wrong));
-  const share=`Last Seen · ${G.lang==='id'?'Kasus Harian':'Daily Case'} ${d.no?'#'+d.no:''}\n${starTxt}  ${lifeTxt}  ⏱ ${fmtSec(d.time)}\n🔥 Streak ${streak} ${G.lang==='id'?'hari':'days'}\n${G.lang==='id'?'Bisa pecahkan lebih cepat?':'Can you solve it faster?'}`;
+  const brag=!stars?(G.lang==='id'?'Kasus ini mengalahkanku.':'This one beat me.'):G.lang==='id'?(d.wrong?`Kupecahkan dalam ${fmtSec(d.time)} dengan ${d.wrong} salah.`:`Kupecahkan dalam ${fmtSec(d.time)} tanpa salah.`):(d.wrong?`Cracked it in ${fmtSec(d.time)} with ${d.wrong} mistake${d.wrong>1?'s':''}.`:`Cracked it in ${fmtSec(d.time)}, no mistakes.`);
+  const share=`🔍 Last Seen · ${G.lang==='id'?'Kasus Harian':'Daily Case'} ${d.no?'#'+d.no:''}\n${starTxt}  ${lifeTxt}  ⏱ ${fmtSec(d.time)}${streak>1?`  🔥${streak}`:''}\n${brag} ${G.lang==='id'?'Kamu bisa lebih cepat?':'Can you beat it?'}\nhttps://ahmddzul.github.io/last-seen/`;
   G.dcShare=share;
   const fr=[['Tasya',3,38],['Bima',3,51],['Dimas',2,44],['Rani',2,73],['Pak RT',1,129]].map(f=>({n:f[0],s:f[1],t:f[2]}));
   fr.push({n:G.lang==='id'?'Kamu':'You',s:stars,t:Math.round(d.time),me:1});
@@ -2869,6 +2959,7 @@ function dcResult(){
 function dcShare(){
   const txt=G.dcShare;const done=()=>toast(G.lang==='id'?'Hasil disalin. Tempel di grup WhatsApp-mu.':'Copied. Paste it in your group chat.');
   const fallback=()=>{const b=$('#sharebox');if(b){const r=document.createRange();r.selectNodeContents(b);const s=getSelection();s.removeAllRanges();s.addRange(r)}toast(G.lang==='id'?'Teks sudah dipilih. Tekan Salin.':'Text selected. Tap Copy.')};
+  if(navigator.share&&/Android|iPhone|iPad/i.test(navigator.userAgent)){navigator.share({text:txt}).catch(()=>{});return}
   try{navigator.clipboard.writeText(txt).then(done,fallback)}catch(e){fallback()}
 }
 
@@ -3056,12 +3147,16 @@ function showMenu(){
   const hrs=Math.floor((mid-now)/36e5),mins=Math.floor((mid-now)%36e5/6e4);
   const dLine=pl?(G.lang==='id'?`Sudah terpecahkan. Kasus baru dalam ${hrs} jam ${mins} menit.`:`Solved. New case in ${hrs}h ${mins}m.`):(G.lang==='id'?`Kasus #${dayNo()} menunggu · sekitar 2 menit`:`Case #${dayNo()} is waiting · about 2 minutes`);
   const lsTxt=G.lang==='id'?'terakhir dilihat hari ini pukul 19.12':'last seen today at 19:12';
+  const newbie=!SAVE.best.prolog&&!pl;
+  const dl2=newbie?(G.lang==='id'?`Kasus #${dayNo()} · pecahkan dalam 1 menit`:`Case #${dayNo()} · crack it in a minute`):dLine;
+  const dailyBtn=`<button class="hm-daily${newbie?' first':''}" data-a="daily"><span class="ai">${IC_CASE}</span><span class="m"><b>${G.lang==='id'?'Kasus Harian':'Daily Case'}${st?`<span class="flame">${FLAME}${st}</span>`:''}</b><span>${dl2}</span></span>${newbie?`<span class="go">${G.lang==='id'?'Main':'Play'}</span>`:I.chevR}</button>`;
   const d=scene(`
     <header class="hm-top"><div class="hm-brand"><h1 class="hm-word">last seen</h1><span class="hm-st" id="lst">${lsTxt}</span></div>
       <button class="hm-ib" data-a="fxM" aria-pressed="${!!SAVE.fx}" aria-label="${G.lang==='id'?'Efek hujan':'Rain effect'}">${IC_RAIN}</button>
       ${SAVE.acc&&SAVE.acc.admin&&SHEET_URL?`<button class="hm-ib hm-admin" data-a="adminOpen" aria-label="${G.lang==='id'?'Dasbor admin':'Admin dashboard'}">${IC_ADMIN}</button>`:''}
       <button class="hm-ib" data-a="settings" aria-label="${G.lang==='id'?'Pengaturan':'Settings'}">${IC_GEAR}</button></header>
     ${annHtml()}
+    ${newbie?dailyBtn:''}
     <p class="hm-hook">${G.lang==='id'?'Nadia tidak pulang sejak Jumat malam.':"Nadia hasn't come home since Friday night."}<span>${G.lang==='id'?'HP-nya ditemukan di peron stasiun. Kamu kakaknya, dan kamu yang memegang HP itu sekarang.':"Her phone was found on a station platform. You're her brother, and now the phone is in your hands."}</span></p>
     <button class="hm-main" data-a="menuPlay" data-tab="${G.lang==='id'?'Berkas 01 · Nadia Pratama':'Case 01 · Nadia Pratama'}">
       <span class="hm-ey">${esc(t(n.ey))}</span>
@@ -3070,7 +3165,8 @@ function showMenu(){
       ${b?stars(b.stars):''}
       <span class="hm-cta">${esc(t(n.cta))}</span>
     </button>
-    <button class="hm-daily" data-a="daily"><span class="ai">${IC_CASE}</span><span class="m"><b>${G.lang==='id'?'Kasus Harian':'Daily Case'}${st?`<span class="flame">${FLAME}${st}</span>`:''}</b><span>${dLine}</span></span>${I.chevR}</button>
+
+    ${newbie?'':dailyBtn}
     <div class="hm-row"><button data-a="levels">${G.lang==='id'?'Semua bab':'All chapters'}</button><button data-a="howto">${esc(t(U.howto))}</button><button class="s2t" data-a="s2"><img src="${PHOTOS.wp_s2}" alt=""><span><small>${G.lang==='id'?'Segera':'Soon'}</small>Season 2</span></button></div>
     <p class="hm-foot">${esc(t(U.phones))}</p>
     <div class="hm-credits">${creditHtml()}${sawHtml()}</div>`,'menu');
