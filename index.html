@@ -1338,10 +1338,11 @@ const lv=()=>LV[G.level];
 
 /* ===== Game state ===== */
 function freshState(id){
-  (G.timers||[]).forEach(clearTimeout);clearInterval(G.ringT);clearInterval(G.callT);clearInterval(G.cineT);
+  (G.timers||[]).forEach(clearTimeout);clearInterval(G.ringT);clearInterval(G.callT);clearInterval(G.cineT);clearInterval(G.oRing);clearInterval(G.oT);
   Object.assign(G,{level:id,scene:'play',phone:LV[id].start,unlocked:!!LV[id].unlocked,nav:{raka:[],nadia:[]},pins:[],found:[],secrets:[],wrong:0,hints:0,hintLv:{},
     battery:typeof LV[id].battery==='function'?LV[id].battery():LV[id].battery,mStart:typeof LV[id].battery==='function'?LV[id].battery():LV[id].battery,min:LV[id].min,acc:0,clockAcc:0,heartAcc:0,ptime:0,unlockAt:0,paused:false,cut:false,over:false,board:false,sel:[],
-    fired:{},read:{},extra:JSON.parse(JSON.stringify(LV[id].add||{})),flags:Object.assign({},LV[id].flags||{}),avOv:Object.assign({},LV[id].avOv||{}),endName:null,timers:[],hintTarget:null,idleKey:null,idleMs:0,idleN:0,connecting:false,ibuOpened:false,swallow:false,coach:0,passcode:'',fails:0,ibuState:null,nc:false,thoughtQ:[],thinking:false,seenChats:{}});
+    fired:{},read:{},extra:JSON.parse(JSON.stringify(LV[id].add||{})),flags:Object.assign({},LV[id].flags||{}),avOv:Object.assign({},LV[id].avOv||{}),endName:null,timers:[],hintTarget:null,idleKey:null,idleMs:0,idleN:0,connecting:false,ibuOpened:false,swallow:false,coach:0,passcode:'',fails:0,ibuState:null,nc:false,thoughtQ:[],thinking:false,seenChats:{},
+    endQ:0,endKey:null,choice:null,fcode:'',callOn:false,curDial:null,ibuAuto:false,asSrc:null});
 }
 
 /* ===== Scenes ===== */
